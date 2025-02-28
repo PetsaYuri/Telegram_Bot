@@ -1,0 +1,36 @@
+{
+    "name": "telegram_bot",
+    "version": "1.0.0",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+        "debug": "tsc --noEmit"
+    },
+    "type": "commonjs",
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "description": "",
+    "dependencies": {
+        "@huggingface/inference": "^2.8.1",
+        "@langchain/google-genai": "^0.1.5",
+        "axios": "^1.7.9",
+        "dotenv": "^16.4.5",
+        "express": "^4.21.2",
+        "googleapis": "^144.0.0",
+        "mammoth": "^1.8.0",
+        "mongoose": "^8.9.3",
+        "node-telegram-bot-api": "^0.66.0",
+        "node-tesseract-ocr": "^2.2.1",
+        "telegraf": "^4.16.3",
+        "torch": "^0.2.7",
+        "transformers": "^3.1.0",
+        "ts-node": "^10.9.2",
+        "zod": "^3.24.2"
+    },
+    "devDependencies": {
+        "@types/express": "^5.0.0",
+        "@types/node-telegram-bot-api": "^0.64.7"
+    }
+}
