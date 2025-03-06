@@ -136,11 +136,8 @@ export const classroomService = {
         const classroom = await getClassroom(chatId);
         const message = 'successfully deleted';
         const materialType = await getMaterialType(chatId, courseId, materialId);
-        console.log(courseId);
-        console.log(materialId)
         switch (materialType) {
             case MaterialTypes.COURSE_WORK:
-                console.log()
                 await classroom.courses.courseWork.delete({
                     courseId,
                     id: materialId
@@ -178,7 +175,6 @@ async function getClassroom(chatId: number | undefined): Promise<classroom_v1.Cl
     }
 
     OAUTH2_CLIENT.setCredentials({ refresh_token: user.refreshToken });
-    console.log(await OAUTH2_CLIENT.getAccessToken())
     return google.classroom({ version: 'v1', auth: OAUTH2_CLIENT });
 }
 

@@ -3,7 +3,7 @@ import User from '../models/users';
 import { bot } from '../..';
 import { ENV } from '../../config/zod/env';
 
-export const OAUTH2_CLIENT = new google.auth.OAuth2(ENV.CLIENT_ID, ENV.CLIENT_SECRET, 'http://localhost:3000/oauth2-callback');
+export const OAUTH2_CLIENT = new google.auth.OAuth2(ENV.CLIENT_ID, ENV.CLIENT_SECRET, `${ENV.HOST_URI}/oauth2-callback`);
 
 export const authService = {
 
