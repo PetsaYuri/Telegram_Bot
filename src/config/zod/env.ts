@@ -31,7 +31,7 @@ const envSchema = zod.object({
     ),
 
     BOT_USERNAME: zod.string().refine(
-        name => name.endsWith('Bot'),
+        name => name.endsWith('Bot') || name.endsWith('bot'),
         'Invalid bot username'
     )
 });
