@@ -6,37 +6,53 @@ import { IBotResponse } from '../api/types/CustomBotResponse';
 
 export const botController = (bot: Telegraf) => {
 
-    //authorisation
-    bot.hears('Authorisation', (ctx: Context) => {
-        const chatId = ctx.chat?.id as number;
-        const res = botService.getAuthorisationResponse(chatId);
-        ctx.reply(res.text, res.keyboard);
-    });
-
-    //menu
     bot.hears('/menu', async (ctx) => {
         const chatId = ctx.chat.id;
         const res = await botService.getMenuResponse(chatId);
         ctx.reply(res.text, res.keyboard);
     });
 
-    bot.hears('Get all courses', async (ctx) => {
-        const chatId = ctx.chat.id;
-        const res = await botService.getOwnCoursesResponse(chatId);
+    bot.hears('Authorisation', (ctx: Context) => {
+        const chatId = ctx.chat?.id as number;
+        const res = botService.getAuthorisationResponse(chatId);
         ctx.reply(res.text, res.keyboard);
     });
 
-    bot.hears('No, back to courses', async (ctx) => {
-        const chatId = ctx.chat.id;
+    bot.hears('Manage your own courses', async (ctx: Context) => {
+        const chatId = ctx.chat?.id as number;
         const res = await botService.getOwnCoursesResponse(chatId);
+        ctx.reply(res.text, res.keyboard);
+    })
+
+    bot.hears('View all available courses', async (ctx) => {
+        const chatId = ctx.chat.id;
+        const res = await botService.getAvailableCoursesResponse(chatId);
         ctx.reply(res.text, res.keyboard);
     });
 
     bot.hears(new RegExp('.*'), async (ctx, next) => {
         const chatId = ctx.chat.id;
-        const courses = await classroomService.getAllClassroomCourses(chatId);
+        const ownCourses = await classroomService.getAllOwnCourses(chatId);
 
+        if (ownCourses.map(course => course.name).includes(ctx.message.text)) {
+            const ownerId = await classroomService.getOwnerIdFromUserProfile(chatId);
+            const ownCourse = ownCourses.find(course => course.name === ctx.message.text) as ICourseInfo;
+
+            if (ownCourse.ownerId === ownerId) {
+                const res = await botService.manageProvidedCourse(chatId, ownCourse);
+                res.map(
+                    ({ text, keyboard }) => ctx.reply(text, keyboard)
+                );
+                return;
+
+            } else {
+                throw new Error("You don't have access to interact with this course")
+            }
+        }
+
+        const courses = await classroomService.getAllAvailableCourses(chatId);
         if (courses.map(course => course.name).includes(ctx.message.text)) {
+
             const course = courses.find(course => course.name === ctx.message.text) as ICourseInfo;
             const res = await botService.getAllMaterialsResponse(chatId, course);
 
@@ -56,7 +72,7 @@ export const botController = (bot: Telegraf) => {
     bot.hears(new RegExp("^Yes, I'd like to review all materials from (.+) course$"), async (ctx) => {
         const chatId = ctx.chat.id;
         const title = ctx.match[1];
-        const arrayCourses = await classroomService.getAllClassroomCourses(chatId);
+        const arrayCourses = await classroomService.getAllAvailableCourses(chatId);
 
         if (arrayCourses.map(course => course.name).includes(title)) {
             const course = arrayCourses.find(course => course.name === title) as ICourseInfo;
@@ -69,4 +85,30 @@ export const botController = (bot: Telegraf) => {
             throw new Error(`You don't have course with title: ${title}`)
         }
     })
+
+    bot.hears('No, back to courses', async (ctx) => {
+        const chatId = ctx.chat.id;
+        const res = await botService.getAvailableCoursesResponse(chatId);
+        ctx.reply(res.text, res.keyboard);
+    });
+
+    bot.action(new RegExp('^delete materialId=(\\d{12}), courseId=(\\d{12})$'), async (ctx) => {
+        const chatId = ctx.chat?.id;
+        await ctx.answerCbQuery();
+        const materialId = ctx.match[1];
+        const courseId = ctx.match[2];
+        console.log('mat', materialId);
+        const res = await botService.deleteMaterial(chatId, courseId, materialId);
+        ctx.reply(res.text);
+    });
+
+    bot.action(new RegExp('^edit materialId=(\\d{12}), courseId=(\\d{12})$'), async (ctx) => {
+        const chatId = ctx.chat?.id;
+        await ctx.answerCbQuery();
+        const materialId = ctx.match[1];
+        const courseId = ctx.match[2];
+        console.log('mat', materialId);
+        const res = await botService.deleteMaterial(chatId, courseId, materialId);
+        ctx.reply(res.text);
+    });
 }
