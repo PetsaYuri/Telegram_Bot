@@ -27,30 +27,24 @@ export const botService = {
 
             return ({ text: 'Main menu', keyboard });
 
-
         } else {
-            const arrayCourseNames = (await classroomService.getAllClassroomCourses(chatId))
-                .map(course => course.name);
-
-            const keyboard = Markup.keyboard(arrayCourseNames
-                .map(courseName => [courseName]))
-                .resize()
-                .oneTime()
+            const keyboard = Markup.keyboard([
+                ['Manage your own courses'],
+                ['View all available courses']
+            ])
 
             return ({ text: 'choose the next action', keyboard });
         }
     },
 
     getOwnCoursesResponse: async (chatId: number): Promise<IBotResponse> => {
-        const arrayCourses = (await classroomService.getAllClassroomCourses(chatId))
-            .map(course => course.name);
+        const courses = await classroomService.getAllOwnCourses(chatId);
+        return getBotResponseWithCourses(courses);
+    },
 
-        const keyboard = Markup.keyboard(
-            arrayCourses.map(courseName => [courseName]))
-            .resize()
-            .oneTime()
-
-        return ({ text: 'choose the next action', keyboard })
+    getAvailableCoursesResponse: async (chatId: number): Promise<IBotResponse> => {
+        const courses = await classroomService.getAllAvailableCourses(chatId);
+        return getBotResponseWithCourses(courses);
     },
 
     getAllMaterialsResponse: async (chatId: number, course: ICourseInfo, withUserLastTimeRetrieved: boolean = true): Promise<IBotResponse | IBotResponse[]> => {
@@ -89,6 +83,31 @@ export const botService = {
         };
 
         return arr.length === 0 ? ({ text: text as string, keyboard: keyboard as Markup.Markup<ReplyKeyboardMarkup> }) : arr;
+    },
+
+    //change name
+    manageProvidedCourse: async (chatId: number, course: ICourseInfo): Promise<IBotResponse[]> => {
+        const materials = await classroomService.getAllMaterials(chatId, course.id);
+        return materials.map(material => {
+            return ({
+                text: material.title + '\n' + material.description + '\n' + 'created: ' + material.creationTime,
+                keyboard: Markup.inlineKeyboard([
+                    [Markup.button.url("Open in browser", material.link)],
+                    [{ text: 'Edit', callback_data: `edit materialId=${material.id}, courseId=${course.id}` }],
+                    [{ text: 'Delete', callback_data: `delete materialId=${material.id}, courseId=${course.id}` }]
+                ])
+            });
+        });
+    },
+
+    editMaterial: async (chatId: number | undefined, courseId: string, materialId: string): Promise<IBotResponse> => {
+        const message = await classroomService.editMaterial(chatId, courseId, materialId)
+        return ({ text: message, keyboard: Markup.keyboard([]) });
+    },
+
+    deleteMaterial: async (chatId: number | undefined, courseId: string, materialId: string): Promise<IBotResponse> => {
+        const message = await classroomService.deleteMaterial(chatId, courseId, materialId)
+        return ({ text: message, keyboard: Markup.keyboard([]) });
     }
 }
 
@@ -103,4 +122,13 @@ function collectMaterialsInResponse(materials: Array<IMaterial>): IBotResponse[]
         })
 
     });
+}
+
+function getBotResponseWithCourses(courses: ICourseInfo[]): IBotResponse {
+    const keyboard = Markup.keyboard(
+        courses.map(course => [course.name]))
+        .resize()
+        .oneTime()
+
+    return ({ text: 'choose the next action', keyboard })
 }
