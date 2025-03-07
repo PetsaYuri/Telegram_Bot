@@ -21,7 +21,7 @@ const envSchema = zod.object({
     ),
 
     CLIENT_ID: zod.string().refine(
-        id => id.length === 72 && id.endsWith('.apps.googleusercontent.com'),
+        id => (id.length === 73 || id.length === 72) && id.endsWith('.apps.googleusercontent.com'),
         'Invalid client id'
     ),
 
@@ -31,7 +31,7 @@ const envSchema = zod.object({
     ),
 
     BOT_USERNAME: zod.string().refine(
-        name => name.endsWith('Bot'),
+        name => name.endsWith('Bot') || name.endsWith('bot'),
         'Invalid bot username'
     )
 });
