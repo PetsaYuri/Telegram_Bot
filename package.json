@@ -14,10 +14,11 @@
     "license": "ISC",
     "description": "",
     "dependencies": {
+        "@googleapis/classroom": "^4.5.0",
         "axios": "^1.7.9",
         "dotenv": "^16.4.5",
         "express": "^4.21.2",
-        "googleapis": "^144.0.0",
+        "google-auth-library": "^9.15.1",
         "mammoth": "^1.8.0",
         "mongoose": "^8.9.3",
         "node-telegram-bot-api": "^0.66.0",
