@@ -1,4 +1,5 @@
 export interface ICourseInfo {
     id: string,
-    name: string
+    name: string,
+    ownerId: string
 }

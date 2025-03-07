@@ -3,7 +3,7 @@ import User from '../models/users';
 import { bot } from '../..';
 import { ENV } from '../../config/zod/env';
 
-export const OAUTH2_CLIENT = new google.auth.OAuth2(ENV.CLIENT_ID, ENV.CLIENT_SECRET, 'http://localhost:3000/oauth2-callback');
+export const OAUTH2_CLIENT = new google.auth.OAuth2(ENV.CLIENT_ID, ENV.CLIENT_SECRET, `${ENV.HOST_URI}/oauth2-callback`);
 
 export const authService = {
 
@@ -14,12 +14,13 @@ export const authService = {
             scope: [
                 "https://www.googleapis.com/auth/classroom.courses",
                 "https://www.googleapis.com/auth/classroom.coursework.me",
-                "https://www.googleapis.com/auth/classroom.courseworkmaterials.readonly",
+                "https://www.googleapis.com/auth/classroom.coursework.students",
+                "https://www.googleapis.com/auth/classroom.courseworkmaterials",
                 'https://www.googleapis.com/auth/classroom.announcements',
-                'https://www.googleapis.com/auth/classroom.announcements.readonly',
+                'https://www.googleapis.com/auth/classroom.rosters'
             ],
             state: chatId,
-            redirect_uri: 'http://localhost:3000/oauth2-callback'
+            redirect_uri: `${ENV.HOST_URI}/oauth2-callback`
         });
     },
 
@@ -38,7 +39,7 @@ export const authService = {
         await bot.telegram.sendMessage(chatId, 'Success authorisation', {
             reply_markup: {
                 keyboard: [
-                    [{ text: 'Get all courses' }]
+                    [{ text: '/menu' }]
                 ]
             }
         });
