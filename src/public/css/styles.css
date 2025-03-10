@@ -1,0 +1,99 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 20px;
+    max-width: 800px;
+    margin: auto;
+    line-height: 1.6;
+}
+
+h1 {
+    font-size: 2em;
+    margin-bottom: 10px;
+    color: #2c3e50;
+}
+
+h3 {
+    text-align: left;
+}
+
+p {
+    font-size: 1.1em;
+    text-align: justify;
+    color: #333;
+    margin-bottom: 15px;
+    text-align: left;
+    text-indent: 20px;
+}
+
+.italic {
+    font-style: italic;
+}
+
+a {
+    display: block;
+    margin: 10px;
+    font-size: 1.2em;
+    text-decoration: none;
+    text-align: left;
+    color: #007bff;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: left;
+}
+
+ul,
+ol {
+    margin: 20px 0;
+    padding-left: 30px;
+    font-size: 18px;
+    line-height: 1.6;
+}
+
+ul {
+    list-style: none;
+}
+
+ul li {
+    position: relative;
+    padding-left: 25px;
+    margin-bottom: 8px;
+}
+
+ul li::before {
+    content: "•";
+    color: #007bff;
+    font-size: 22px;
+    position: absolute;
+    left: 0;
+    top: 2px;
+}
+
+ol {
+    counter-reset: list-counter;
+}
+
+ol li {
+    counter-increment: list-counter;
+    padding-left: 10px;
+    margin-bottom: 8px;
+}
+
+ol li::marker {
+    font-weight: bold;
+    color: #007bff;
+}
+
+ul li:hover,
+ol li:hover {
+    color: #0056b3;
+    cursor: pointer;
+    transition: color 0.2s ease-in-out;
+}

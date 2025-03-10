@@ -2,7 +2,7 @@
     "compilerOptions": {
         /* Visit https://aka.ms/tsconfig to read more about this file */
         /* Projects */
-        // "incremental": true,                              /* Save .tsbuildinfo files to allow for incremental compilation of projects. */
+        //"incremental": true, /* Save .tsbuildinfo files to allow for incremental compilation of projects. */
         // "composite": true,                                /* Enable constraints that allow a TypeScript project to be used with project references. */
         // "tsBuildInfoFile": "./.tsbuildinfo",              /* Specify the path to .tsbuildinfo incremental compilation file. */
         // "disableSourceOfProjectReferenceRedirect": true,  /* Disable preferring source files instead of declaration files when referencing composite projects. */
@@ -52,7 +52,7 @@
         // "emitDeclarationOnly": true,                      /* Only output d.ts files and not JavaScript files. */
         // "sourceMap": true,                                /* Create source map files for emitted JavaScript files. */
         // "inlineSourceMap": true,                          /* Include sourcemap files inside the emitted JavaScript. */
-        // "noEmit": true,                                   /* Disable emitting files from a compilation. */
+        "noEmit": false, /* Disable emitting files from a compilation. */
         // "outFile": "./",                                  /* Specify a file that bundles all outputs into one JavaScript file. If 'declaration' is true, also designates a file that bundles all .d.ts output. */
         "outDir": "./dist", /* Specify an output folder for all emitted files. */
         // "removeComments": true,                           /* Disable emitting comments. */
@@ -98,13 +98,14 @@
         // "allowUnusedLabels": true,                        /* Disable error reporting for unused labels. */
         // "allowUnreachableCode": true,                     /* Disable error reporting for unreachable code. */
         /* Completeness */
-        // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
+        //  "skipDefaultLibCheck": true, /* Skip type checking .d.ts files that are included with TypeScript. */
         "skipLibCheck": true /* Skip type checking all .d.ts files. */
     },
     "include": [
         "src/**/*"
     ],
     "exclude": [
-        "node_modules"
+        "node_modules",
+        "dist"
     ]
 }

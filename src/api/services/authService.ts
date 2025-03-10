@@ -1,9 +1,9 @@
-import { google } from 'googleapis';
+import { OAuth2Client } from 'google-auth-library';
 import User from '../models/users';
 import { bot } from '../..';
 import { ENV } from '../../config/zod/env';
 
-export const OAUTH2_CLIENT = new google.auth.OAuth2(ENV.CLIENT_ID, ENV.CLIENT_SECRET, `${ENV.HOST_URI}/oauth2-callback`);
+export const OAUTH2_CLIENT = new OAuth2Client(ENV.CLIENT_ID, ENV.CLIENT_SECRET, `${ENV.HOST_URI}/oauth2-callback`);
 
 export const authService = {
 

@@ -1,9 +1,9 @@
-import { classroom_v1, google } from "googleapis";
 import User from "../models/users";
 import { OAUTH2_CLIENT } from "./authService";
 import { IMaterial } from "../types/CustomMaterial";
 import { ICourseInfo } from "../types/CustomCourseInfo";
 import { MaterialTypes } from "../enums/MaterialTypes";
+import { classroom_v1 } from "@googleapis/classroom";
 
 export const classroomService = {
 
@@ -175,7 +175,7 @@ async function getClassroom(chatId: number | undefined): Promise<classroom_v1.Cl
     }
 
     OAUTH2_CLIENT.setCredentials({ refresh_token: user.refreshToken });
-    return google.classroom({ version: 'v1', auth: OAUTH2_CLIENT });
+    return new classroom_v1.Classroom({ auth: OAUTH2_CLIENT });
 }
 
 async function getMaterialType(chatId: number | undefined, courseId: string, materialId: string): Promise<MaterialTypes> {
