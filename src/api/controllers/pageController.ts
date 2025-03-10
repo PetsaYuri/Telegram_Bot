@@ -3,14 +3,14 @@ import path from 'path'
 
 export const pageController = {
     homePage: (req: Request, res: Response): void => {
-        res.sendFile(path.resolve(__dirname, '../../public/html/index.html'));
+        res.sendFile(path.resolve(__dirname, 'public/html/index.html'));
     },
 
     privacyPolicy: (req: Request, res: Response): void => {
-        res.sendFile(path.resolve(__dirname, '../../public/html/privacy-policy.html'));
+        res.sendFile(path.resolve(__dirname, 'public/html/privacy-policy.html'));
     },
 
     termsOfService: (req: Request, res: Response): void => {
-        res.sendFile(path.resolve(__dirname, '../../public/html/terms-of-service.html'));
+        res.sendFile(path.resolve(__dirname, 'public/html/terms-of-service.html'));
     }
 }
