@@ -21,6 +21,6 @@ app.listen(ENV.PORT, () => {
     console.log(`Server is running on port: ${ENV.PORT}`)
 })
 
-app.use(express.static(path.join(__dirname, '../public')))
+app.use(express.static(path.join(__dirname, 'public')))
 app.use(pageRoute);
 app.use(authRoute);
