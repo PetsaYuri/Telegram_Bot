@@ -1,5 +1,5 @@
 import { Markup } from "telegraf";
-import { ReplyKeyboardMarkup } from "telegraf/typings/core/types/typegram";
+import { InlineKeyboardMarkup, ReplyKeyboardMarkup } from "telegraf/typings/core/types/typegram";
 import { classroomService } from "../api/services/classroomService";
 import { IBotResponse } from "../api/types/CustomBotResponse";
 import User from "../api/models/users";
@@ -10,10 +10,7 @@ import { ENV } from "../config/zod/env";
 
 export const botService = {
     getAuthorisationResponse: (chatId: number): IBotResponse => {
-        const keyboard = Markup.inlineKeyboard([
-            [Markup.button.url("Login", `${ENV.HOST_URI}/auth?chat_id=${chatId}`)]
-        ]);
-
+        const keyboard = getInlineKeyboardWithAuthorisation(chatId)
         return ({ text: 'Follow the next link for authorisation via google account', keyboard });
     },
 
@@ -131,4 +128,10 @@ function getBotResponseWithCourses(courses: ICourseInfo[]): IBotResponse {
         .oneTime()
 
     return ({ text: 'choose the next action', keyboard })
+}
+
+export function getInlineKeyboardWithAuthorisation(chatId: number): Markup.Markup<InlineKeyboardMarkup> {
+    return Markup.inlineKeyboard([
+        [Markup.button.url("Login", `${ENV.HOST_URI}/auth?chat_id=${chatId}`)]
+    ]);
 }

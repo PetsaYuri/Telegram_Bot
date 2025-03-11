@@ -12,32 +12,68 @@
     <body>
         <h1>Privacy Policy</h1>
 
-        <p class="italic">Last Updated: 10.03.2025</p>
+        <p class="italic">Last Updated: 11.03.2025</p>
         <p><strong>1. Introduction</strong></p>
-        <p>This Privacy Policy explains how Classroom Helper <strong>collects, uses, and protects</strong> your
-            information.
+        <p>This Privacy Policy explains how Classroom Helper <strong>collects, processes, and protects</strong> your
+            information when you use our services.
         </p>
 
         <p><strong>2. Information We Collect</strong></p>
+        <p>We collect the following data when you use the application:</p>
         <ul class="container">
-            <li>User data (e.g., name, email)</li>
-            <li>Usage data (e.g., interactions with our app)</li>
+            <li><strong>Authentication Data:</strong> OAuth2 authentication tokens to access Google Classroom.</li>
+            <li><strong>Course Data:</strong> Course ID, course title, and last retrieval timestamp (only if accessed
+                through our service).</li>
+            <li><strong>Encrypted Refresh Token:</strong> Stored securely but saved in encrypted format within the
+                database.
+            </li>
+            <li><strong>Telegram Chat ID:</strong> If connected via Telegram, we store the chat ID to enable bot
+                interactions.
+            </li>
         </ul>
 
         <p><strong>3. How We Use Your Information</strong></p>
+        <p>We use this data to:</p>
         <ul class="container">
-            <li>To provide and improve our services</li>
-            <li>To ensure security</li>
+            <li>Authenticate and retrieve Google Classroom data on your behalf.</li>
+            <li>Improve and personalize user experience.</li>
+            <li>Enable Telegram-based interactions if opted in.</li>
+            <li>Ensure security and prevent unauthorized access.</li>
         </ul>
 
-        <p><strong>4. Data Sharing & Security</strong></p>
+        <p><strong>4. Data Retention & Deletion</strong></p>
         <ul class="container">
-            <li>We do not sell your data.</li>
-            <li>We use encryption to protect user information.</li>
+            <li>We retain user data <strong>only as long as necessary</strong> to provide our services.
+            </li>
+            <li>If you <strong>revoke Google access</strong>, all associated data (including classroom data and Telegram
+                chat ID) is deleted within <strong>30 days</strong>.</li>
+            <li>You can request <strong>immediate data deletion</strong> by contacting us at:
+                <strong>petsa.yurii@student.uzhnu.edu.ua</strong>.
+            </li>
+            <li><strong>Refresh tokens are stored in an encrypted format but as plain text in the database</strong>,
+                meaning they are secured but still exist in a retrievable state.</li>
         </ul>
 
-        <p><strong>5. Contact Us</strong></p>
-        <p>If you have any questions, contact us at: <strong>petsa.yurii@student.uzhnu.edu.ua</strong></p>
+        <p><strong>5. Data Sharing & Security</strong></p>
+        <ul class="container">
+            <li><strong>We do not sell or share</strong> personal data with third parties.</li>
+            <li>OAuth2 authentication tokens are <strong>encrypted before storage</strong>, but they remain stored in
+                the database in an accessible format.</li>
+            <li>We follow industry security standards to protect sensitive information.</li>
+        </ul>
+
+        <p><strong>6. Your Rights</strong></p>
+        <p>You have the right to:</p>
+        <ul class="container">
+            <li>Revoke Google access at any time.</li>
+            <li>Request deletion of stored data.</li>
+            <li>Contact us for any data privacy concerns.</li>
+        </ul>
+
+        <p><strong>7. Contact Us</strong></p>
+        <p>For any questions or privacy concerns, please contact us at:
+            <strong>petsa.yurii@student.uzhnu.edu.ua</strong>
+        </p>
 
         <a href="/">Back to Homepage</a>
     </body>
