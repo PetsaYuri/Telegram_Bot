@@ -33,6 +33,20 @@ const envSchema = zod.object({
     BOT_USERNAME: zod.string().refine(
         name => name.endsWith('Bot') || name.endsWith('bot'),
         'Invalid bot username'
+    ),
+
+    DATA_RETENTION_PERIOD: zod.string().refine(
+        period => period.match(/^\d{1,2}d$/),
+        'Invalid data retention duration'
+    ),
+
+    USER_CLEANUP_CRON: zod.string().refine(
+        time => time.match(/^\d{1,2}[mhd]$/),
+        'Invalid user cleanup cron value'
+    ),
+
+    SECRET_KEY_FOR_USER_INFO: zod.string().refine(
+        key => key.length === 64
     )
 });
 

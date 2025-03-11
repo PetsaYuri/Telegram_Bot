@@ -2,6 +2,7 @@ import { OAuth2Client } from 'google-auth-library';
 import User from '../models/users';
 import { bot } from '../..';
 import { ENV } from '../../config/zod/env';
+import { encryptUserData } from './userService';
 
 export const OAUTH2_CLIENT = new OAuth2Client(ENV.CLIENT_ID, ENV.CLIENT_SECRET, `${ENV.HOST_URI}/oauth2-callback`);
 
@@ -27,15 +28,8 @@ export const authService = {
     oauth2Callback: async (code: any, state: any): Promise<string> => {
         const { tokens } = await OAUTH2_CLIENT.getToken(code);
         const chatId = state;
-        const refreshToken = tokens.refresh_token;
-        const user = await User.exists({ chatId });
-
-        if (!user) {
-            await User.create({ chatId, refreshToken });
-        } else {
-            await User.findByIdAndUpdate(user._id, { refreshToken });
-        }
-
+        const refreshToken = tokens.refresh_token as string;
+        await setRefreshTokenToUser(chatId, refreshToken);
         await bot.telegram.sendMessage(chatId, 'Success authorisation', {
             reply_markup: {
                 keyboard: [
@@ -45,5 +39,16 @@ export const authService = {
         });
 
         return `tg://resolve?domain=${ENV.BOT_USERNAME}`;
+    }
+}
+
+async function setRefreshTokenToUser(chatId: string, refreshToken: string) {
+    const encryptedToken = encryptUserData(refreshToken);
+    const user = await User.exists({ chatId });
+
+    if (!user) {
+        await User.create({ chatId, refreshToken: encryptedToken });
+    } else {
+        await User.findByIdAndUpdate(user._id, { refreshToken: encryptedToken });
     }
 }

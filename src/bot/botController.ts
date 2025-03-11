@@ -3,6 +3,7 @@ import { classroomService } from '../api/services/classroomService';
 import { ICourseInfo } from '../api/types/CustomCourseInfo';
 import { botService } from './botService';
 import { IBotResponse } from '../api/types/CustomBotResponse';
+import { asyncHandler } from '../api/middleware/asyncHandler';
 
 export const botController = (bot: Telegraf) => {
 
@@ -18,11 +19,11 @@ export const botController = (bot: Telegraf) => {
         ctx.reply(res.text, res.keyboard);
     });
 
-    bot.hears('Manage your own courses', async (ctx: Context) => {
+    bot.hears('Manage your own courses', asyncHandler(async (ctx: Context) => {
         const chatId = ctx.chat?.id as number;
         const res = await botService.getOwnCoursesResponse(chatId);
         ctx.reply(res.text, res.keyboard);
-    })
+    }))
 
     bot.hears('View all available courses', async (ctx) => {
         const chatId = ctx.chat.id;

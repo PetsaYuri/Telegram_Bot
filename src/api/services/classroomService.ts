@@ -4,6 +4,7 @@ import { IMaterial } from "../types/CustomMaterial";
 import { ICourseInfo } from "../types/CustomCourseInfo";
 import { MaterialTypes } from "../enums/MaterialTypes";
 import { classroom_v1 } from "@googleapis/classroom";
+import { decryptUserData } from "./userService";
 
 export const classroomService = {
 
@@ -174,7 +175,8 @@ async function getClassroom(chatId: number | undefined): Promise<classroom_v1.Cl
         throw new Error(`The user with chatId '${chatId}' isn't authorised`);
     }
 
-    OAUTH2_CLIENT.setCredentials({ refresh_token: user.refreshToken });
+    const decryptedToken = decryptUserData(user.refreshToken);
+    OAUTH2_CLIENT.setCredentials({ refresh_token: decryptedToken });
     return new classroom_v1.Classroom({ auth: OAUTH2_CLIENT });
 }
 
