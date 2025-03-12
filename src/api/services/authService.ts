@@ -17,7 +17,8 @@ export const authService = {
                 "https://www.googleapis.com/auth/classroom.coursework.me",
                 "https://www.googleapis.com/auth/classroom.coursework.students",
                 "https://www.googleapis.com/auth/classroom.courseworkmaterials",
-                'https://www.googleapis.com/auth/classroom.announcements'
+                'https://www.googleapis.com/auth/classroom.announcements',
+                'https://www.googleapis.com/auth/classroom.rosters'
             ],
             state: chatId,
             redirect_uri: `${ENV.HOST_URI}/oauth2-callback`
