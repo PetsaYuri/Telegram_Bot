@@ -109,7 +109,22 @@ export const botController = (bot: Telegraf) => {
         const materialId = ctx.match[1];
         const courseId = ctx.match[2];
         console.log('mat', materialId);
-        const res = await botService.deleteMaterial(chatId, courseId, materialId);
+        const res = await botService.editMaterial(chatId, courseId, materialId);
         ctx.reply(res.text);
     });
+
+    bot.action(new RegExp('^notif mat=(\\d{12}) course=(\\d{12}) date=(\\d{2}):(\\d{2}):(\\d{4})T(?:(\\d{2}):(\\d{2}))?'), async (ctx) => {
+        const chatId = ctx.chat?.id as number;
+        await ctx.answerCbQuery();
+
+        const materialId = ctx.match[1];
+        const courseId = ctx.match[2];
+        const day = Number.parseInt(ctx.match[3]);
+        const month = Number.parseInt(ctx.match[4]);
+        const hour = ctx.match[6];
+        const minute = ctx.match[7];
+
+        const res = await botService.setNotification(chatId, materialId, courseId, day, month, hour, minute);
+        await ctx.reply(res.text);
+    })
 }

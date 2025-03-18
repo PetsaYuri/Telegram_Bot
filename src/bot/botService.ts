@@ -7,6 +7,9 @@ import { ICourseInfo } from "../api/types/CustomCourseInfo";
 import Course, { ICourse } from "../api/models/courses";
 import { IMaterial } from "../api/types/CustomMaterial";
 import { ENV } from "../config/zod/env";
+import { classroom_v1 } from "@googleapis/classroom";
+import cron from 'node-cron';
+import { bot } from "..";
 
 export const botService = {
     getAuthorisationResponse: (chatId: number): IBotResponse => {
@@ -55,7 +58,7 @@ export const botService = {
         if (withUserLastTimeRetrieved) {
             let courseDb = await Course.findOne({ courseId: course.id, user }) as ICourse;
             materials = await classroomService.getAllMaterials(chatId, course.id, courseDb?.lastTimeRetrieved);
-            await Course.findOneAndUpdate({ _id: courseDb.id }, { lastTimeRetrieved: new Date() });
+            // await Course.findOneAndUpdate({ _id: courseDb.id }, { lastTimeRetrieved: new Date() });
         }
 
         else {
@@ -105,19 +108,39 @@ export const botService = {
     deleteMaterial: async (chatId: number | undefined, courseId: string, materialId: string): Promise<IBotResponse> => {
         const message = await classroomService.deleteMaterial(chatId, courseId, materialId)
         return ({ text: message, keyboard: Markup.keyboard([]) });
-    }
+    },
+
+    setNotification: async (chatId: number, courseWorkId: string, courseId: string, day: number, month: number, hour?: string, minute?: string): Promise<IBotResponse> => {
+        const courseName = await classroomService.getCourseNameById(chatId, '758358245506');
+        const courseWorkTitle = await classroomService.getCourseWorkTitleById(chatId, courseId, courseWorkId);
+        const message = `Notification: only one hour to go before due date for the '${courseWorkTitle}' work (the '${courseName}' course)`;
+
+        setScheduler(chatId, message, day, month, hour, minute);
+        return ({ text: `Notification for '${courseWorkTitle}' work set successfully`, keyboard: Markup.keyboard([]) })
+    },
 }
 
 function collectMaterialsInResponse(materials: Array<IMaterial>): IBotResponse[] {
     return materials.map(material => {
+        let text = material.title + '\n' + material.description + '\n created: ' + material.creationTime;
+        let keyboard = Markup.inlineKeyboard([
+            [Markup.button.url("Open in browser", material.link)]
+        ]);
+
+        if (material.dueDate) {
+            text += '\n due date: ' + getFormattedDate(material.dueDate);
+
+            if (material.dueTime) {
+                text += ' | ' + getFormattedTime(material.dueTime);
+            }
+
+            keyboard = addDueDateBtnInKeyboard(keyboard, material.id, material.courseId, material.dueDate, material.dueTime);
+        }
 
         return ({
-            text: material.title + '\n' + material.description + '\n' + 'created: ' + material.creationTime,
-            keyboard: Markup.inlineKeyboard([
-                [Markup.button.url("Open in browser", material.link)]
-            ])
+            text,
+            keyboard
         })
-
     });
 }
 
@@ -134,4 +157,52 @@ export function getInlineKeyboardWithAuthorisation(chatId: number): Markup.Marku
     return Markup.inlineKeyboard([
         [Markup.button.url("Login", `${ENV.HOST_URI}/auth?chat_id=${chatId}`)]
     ]);
+}
+
+function addDueDateBtnInKeyboard(keyboard: Markup.Markup<InlineKeyboardMarkup>, taskId: string, courseId: string, dueDate: classroom_v1.Schema$Date, dueTime?: classroom_v1.Schema$TimeOfDay): Markup.Markup<InlineKeyboardMarkup> {
+    let buttons = keyboard.reply_markup.inline_keyboard;
+    let callbackText = `notif mat=${taskId} course=${courseId} date=${getFormattedDate(dueDate)}`;
+    if (dueTime) {
+        dueTime.hours = (dueTime.hours as number) - 1
+        callbackText += `T${getFormattedTime(dueTime)}`;
+    }
+
+    buttons.push([Markup.button.callback('Set due date notification (1 hour before)', callbackText)])
+    return Markup.inlineKeyboard(buttons);
+}
+
+function getFormattedDate(dueDate: classroom_v1.Schema$Date): string {
+    const month = dueDate.month;
+    return dueDate.day + ':' + (month && month < 10 ? '0' + month : month) + ':' + dueDate.year
+}
+
+function getFormattedTime(dueTime: classroom_v1.Schema$TimeOfDay): string {
+    let hoursStr;
+    let hours = (dueTime.hours as number) + 2;
+    if (hours < 10) {
+        hoursStr = '0' + hours;
+    }
+
+    let minutesStr;
+    let minutes;
+    if (dueTime.minutes) {
+        minutes = dueTime.minutes;
+
+        if (minutes < 10) {
+            minutesStr = '0' + minutes;
+        }
+
+    } else {
+        minutesStr = '00';
+    }
+
+    const formatedTime = (hoursStr ? hoursStr : hours) + ':' + (minutesStr ? minutesStr : minutes);
+    return formatedTime;
+}
+
+function setScheduler(chatId: number, message: string, day: number, month: number, hour?: string, minute?: string): void {
+    const scheduler = cron.schedule(`${minute} ${hour} ${day} ${month} *`, () => {
+        bot.telegram.sendMessage(chatId, message);
+        scheduler.stop();
+    });
 }

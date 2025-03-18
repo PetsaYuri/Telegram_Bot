@@ -53,13 +53,13 @@ export const classroomService = {
 
         const allMaterials = [
             ...courseWorks
-                ?.map(courseWork => ({ ...courseWork, type: MaterialTypes.COURSE_WORK })) ?? [],
+                ?.map(courseWork => ({ ...courseWork, type: MaterialTypes.COURSE_WORK, dueDate: courseWork.dueDate, dueTime: courseWork.dueTime })) ?? [],
 
             ...announcements
-                ?.map(announcement => ({ ...announcement, type: MaterialTypes.ANNOUNCEMENT })) ?? [],
+                ?.map(announcement => ({ ...announcement, type: MaterialTypes.ANNOUNCEMENT, dueDate: null, dueTime: null })) ?? [],
 
             ...courseWorkMaterials
-                ?.map(courseWorkMaterial => ({ ...courseWorkMaterial, type: MaterialTypes.COURSE_WORK_MATERIAL })) ?? []
+                ?.map(courseWorkMaterial => ({ ...courseWorkMaterial, type: MaterialTypes.COURSE_WORK_MATERIAL, dueDate: null, dueTime: null })) ?? []
         ];
 
         const customMaterials = allMaterials
@@ -70,7 +70,9 @@ export const classroomService = {
                 description: 'description' in material ? material.description : '',
                 link: material.alternateLink as string,
                 creationTime: material.creationTime as string,
-                type: material.type
+                type: material.type,
+                dueDate: material.dueDate,
+                dueTime: material.dueTime
             }) as IMaterial);
 
         if (lastTimeRetrieved) {
@@ -165,6 +167,14 @@ export const classroomService = {
             default:
                 throw new Error(`Cannot delete material with id: '${materialId}'`)
         }
+    },
+
+    getCourseNameById: async (chatId: number | undefined, courseId: string): Promise<string | null | undefined> => {
+        return (await getCourseById(chatId, courseId)).name;
+    },
+
+    getCourseWorkTitleById: async (chatId: number, courseId: string, courseWorkId: string): Promise<string | null | undefined> => {
+        return (await getCourseWorkById(chatId, courseId, courseWorkId)).title;
     }
 }
 
@@ -211,4 +221,18 @@ async function getMaterialType(chatId: number | undefined, courseId: string, mat
     }
 
     throw new Error('Cannot define the type of material')
+}
+
+async function getCourseById(chatId: number | undefined, courseId: string): Promise<classroom_v1.Schema$Course> {
+    const classroom = await getClassroom(chatId);
+    return (await classroom.courses.get({ id: courseId })).data;
+}
+
+async function getCourseWorkById(chatId: number | undefined, courseId: string, courseWorkId: string): Promise<classroom_v1.Schema$CourseWork> {
+    const classroom = await getClassroom(chatId);
+
+    return (await classroom.courses.courseWork.get({
+        id: courseWorkId,
+        courseId
+    })).data;
 }
