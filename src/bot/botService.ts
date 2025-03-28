@@ -10,6 +10,8 @@ import { ENV } from "../config/zod/env";
 import { classroom_v1 } from "@googleapis/classroom";
 import cron from 'node-cron';
 import { bot } from "..";
+import { ICreateTaskSession } from "../api/types/CustomSession";
+import { CourseActions } from "../api/enums/CourseActions";
 
 export const botService = {
     getAuthorisationResponse: (chatId: number): IBotResponse => {
@@ -37,14 +39,20 @@ export const botService = {
         }
     },
 
-    getOwnCoursesResponse: async (chatId: number): Promise<IBotResponse> => {
-        const courses = await classroomService.getAllOwnCourses(chatId);
-        return getBotResponseWithCourses(courses);
-    },
+    getCourseResponse: async (chatId: number, action: CourseActions): Promise<IBotResponse> => {
+        let courses;
+        switch (action) {
+            case CourseActions.MANAGE:
+                courses = await classroomService.getAllOwnCourses(chatId);
+                break;
+            case CourseActions.VIEW:
+                courses = await classroomService.getAllAvailableCourses(chatId);
+                break;
+            default:
+                throw new Error('Sorry, we can not recognise the type of your action')
+        }
 
-    getAvailableCoursesResponse: async (chatId: number): Promise<IBotResponse> => {
-        const courses = await classroomService.getAllAvailableCourses(chatId);
-        return getBotResponseWithCourses(courses);
+        return getBotResponseWithCourses(courses, action);
     },
 
     getAllMaterialsResponse: async (chatId: number, course: ICourseInfo, withUserLastTimeRetrieved: boolean = true): Promise<IBotResponse | IBotResponse[]> => {
@@ -85,18 +93,105 @@ export const botService = {
         return arr.length === 0 ? ({ text: text as string, keyboard: keyboard as Markup.Markup<ReplyKeyboardMarkup> }) : arr;
     },
 
-    //change name
-    manageProvidedCourse: async (chatId: number, course: ICourseInfo): Promise<IBotResponse[]> => {
-        const materials = await classroomService.getAllMaterials(chatId, course.id);
-        return materials.map(material => {
-            return ({
-                text: material.title + '\n' + material.description + '\n' + 'created: ' + material.creationTime,
-                keyboard: Markup.inlineKeyboard([
-                    [Markup.button.url("Open in browser", material.link)],
-                    [{ text: 'Edit', callback_data: `edit materialId=${material.id}, courseId=${course.id}` }],
-                    [{ text: 'Delete', callback_data: `delete materialId=${material.id}, courseId=${course.id}` }]
-                ])
-            });
+    getMaterialsFromCourse: async (chatId: number, courseName: string, action: CourseActions): Promise<IBotResponse | IBotResponse[]> => {
+        const courses = await getCourseByAction(chatId, action);
+        const ownerId = await classroomService.getOwnerIdFromUserProfile(chatId);
+
+        if (courses.map(course => course.name).includes(courseName)) {
+            const course = courses.find(course => course.name === courseName) as ICourseInfo;
+            const courseId = await classroomService.getCourseIdByName(chatId, courseName);
+
+            if (courseId) {
+                const materials = await classroomService.getAllMaterials(chatId, courseId);
+                if (course.ownerId === ownerId) {
+                    let res = materials.map(material => {
+                        return ({
+                            text: material.title + '\n' + material.description + '\n' + 'created: ' + material.creationTime,
+                            keyboard: Markup.inlineKeyboard([
+                                [Markup.button.url("Open in browser", material.link)],
+                                [{ text: 'Edit', callback_data: `edit materialId=${material.id}, courseId=${courseId}` }],
+                                [{ text: 'Delete', callback_data: `delete materialId=${material.id}, courseId=${courseId}` }]
+                            ])
+                        });
+                    });
+
+                    return res;
+
+                } else {
+                    let response = await botService.getAllMaterialsResponse(chatId, course);
+                    return response;
+                }
+            }
+        }
+
+        throw new Error('course not found')
+    },
+
+    getCreateTaskResponse: (courseName: string): IBotResponse => {
+        const keyboard = Markup.keyboard([
+            ...getCreateTaskReplyKeyboard(courseName).reply_markup.keyboard,
+            ...getBackToTheCoursesReplyKeyboard().reply_markup.keyboard,
+        ]);
+        return ({ text: 'Your materials from the selected course:', keyboard })
+    },
+
+    createTask: (ctx: any): void => {
+        const chatId = ctx.chat?.id as number;
+        const courseName = ctx.match[1];
+        getTaskPropertiesFromUser(ctx).then(async res => {
+            const taskProps = {
+                title: res.state.title as string
+            }
+
+            const description = res.state.description;
+            const dueDate = res.state.dueDate;
+            const dueTime = res.state.dueTime;
+            const maxPoints = res.state.maxPoints;
+
+            if (!taskProps.title) {
+                throw new Error('The title must be filled in')
+            }
+
+            if (description !== '-') {
+                Object.assign(taskProps, description);
+            }
+
+            if (dueDate && dueDate !== '-') {
+                const splitedDate = dueDate.split('.', 3);
+                Object.assign(taskProps, {
+                    dueDate: {
+                        year: splitedDate[2],
+                        month: splitedDate[1],
+                        day: splitedDate[0]
+                    },
+                    dueTime: {
+                        hours: 0,
+                        minutes: 0
+                    }
+                });
+            }
+
+            if (dueTime && dueTime !== '-' && dueDate) {
+                const splitedTime = dueTime.split(':', 2);
+                Object.assign(taskProps, {
+                    dueTime: {
+                        hours: Number.parseInt(splitedTime[0]) - 2,
+                        minutes: splitedTime[1]
+                    }
+                });
+            }
+
+            if (maxPoints) {
+                let points = Number.parseInt(maxPoints);
+
+                if (points > 0) {
+                    Object.assign(taskProps, { maxPoints });
+                }
+            }
+
+            const link = await classroomService.createTask(chatId, courseName, taskProps);
+            await ctx.reply('successfully created', getInlineKeyboardWithURI('View in browser', link));
+            await ctx.reply('choose the next action:', getReplyKeyboardReturnToCourse(courseName));
         });
     },
 
@@ -123,9 +218,7 @@ export const botService = {
 function collectMaterialsInResponse(materials: Array<IMaterial>): IBotResponse[] {
     return materials.map(material => {
         let text = material.title + '\n' + material.description + '\n created: ' + material.creationTime;
-        let keyboard = Markup.inlineKeyboard([
-            [Markup.button.url("Open in browser", material.link)]
-        ]);
+        let keyboard = getInlineKeyboardWithURI('Open in browser', material.link);
 
         if (material.dueDate) {
             text += '\n due date: ' + getFormattedDate(material.dueDate);
@@ -144,9 +237,9 @@ function collectMaterialsInResponse(materials: Array<IMaterial>): IBotResponse[]
     });
 }
 
-function getBotResponseWithCourses(courses: ICourseInfo[]): IBotResponse {
+function getBotResponseWithCourses(courses: ICourseInfo[], action: CourseActions): IBotResponse {
     const keyboard = Markup.keyboard(
-        courses.map(course => [course.name]))
+        courses.map(course => [`${action} '${course.name}' course`]))
         .resize()
         .oneTime()
 
@@ -205,4 +298,56 @@ function setScheduler(chatId: number, message: string, day: number, month: numbe
         bot.telegram.sendMessage(chatId, message);
         scheduler.stop();
     });
+}
+
+function getCreateTaskReplyKeyboard(courseName: string): Markup.Markup<ReplyKeyboardMarkup> {
+    return Markup.keyboard([
+        [`Create task for '${courseName}' course`]
+    ])
+        .resize()
+        .oneTime();
+}
+
+function getBackToTheCoursesReplyKeyboard(): Markup.Markup<ReplyKeyboardMarkup> {
+    return Markup.keyboard([
+        ['Manage your own courses']
+    ])
+        .resize()
+        .oneTime();
+}
+
+function getReplyKeyboardReturnToCourse(courseName: string): Markup.Markup<ReplyKeyboardMarkup> {
+    return Markup.keyboard([
+        [`Return to your '${courseName}' course`]
+    ])
+        .resize()
+        .oneTime();
+}
+
+function getTaskPropertiesFromUser(ctx: any): Promise<ICreateTaskSession> {
+    return new Promise((resolve) => {
+        ctx.scene.enter('CREATE_TASK');
+
+        const checkState = setInterval(() => {
+            if (!ctx.wizard?.cursor) {
+                clearInterval(checkState);
+                resolve(ctx.session.__scenes);
+            }
+        }, 500)
+    })
+}
+
+function getInlineKeyboardWithURI(text: string, uri: string): Markup.Markup<InlineKeyboardMarkup> {
+    return Markup.inlineKeyboard([
+        [Markup.button.url(text, uri)]
+    ]);
+}
+
+async function getCourseByAction(chatId: number, action: CourseActions): Promise<ICourseInfo[]> {
+    switch (action) {
+        case CourseActions.VIEW:
+            return await classroomService.getAllAvailableCourses(chatId);
+        case CourseActions.MANAGE:
+            return await classroomService.getAllOwnCourses(chatId);
+    }
 }

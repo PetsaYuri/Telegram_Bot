@@ -1,11 +1,12 @@
-import { Context, Telegraf } from 'telegraf';
+import { Context, Scenes, Telegraf } from 'telegraf';
 import { classroomService } from '../api/services/classroomService';
 import { ICourseInfo } from '../api/types/CustomCourseInfo';
 import { botService } from './botService';
 import { IBotResponse } from '../api/types/CustomBotResponse';
 import { asyncHandler } from '../api/middleware/asyncHandler';
+import { CourseActions } from '../api/enums/CourseActions';
 
-export const botController = (bot: Telegraf) => {
+export const botController = (bot: Telegraf<Scenes.SceneContext>) => {
 
     bot.hears('/menu', async (ctx) => {
         const chatId = ctx.chat.id;
@@ -19,55 +20,34 @@ export const botController = (bot: Telegraf) => {
         ctx.reply(res.text, res.keyboard);
     });
 
-    bot.hears('Manage your own courses', asyncHandler(async (ctx: Context) => {
+    bot.hears(new RegExp('Manage your own courses$'), asyncHandler(async (ctx: Context) => {
         const chatId = ctx.chat?.id as number;
-        const res = await botService.getOwnCoursesResponse(chatId);
+        const res = await botService.getCourseResponse(chatId, CourseActions.MANAGE);
         ctx.reply(res.text, res.keyboard);
     }))
 
     bot.hears('View all available courses', async (ctx) => {
         const chatId = ctx.chat.id;
-        const res = await botService.getAvailableCoursesResponse(chatId);
+        const res = await botService.getCourseResponse(chatId, CourseActions.VIEW);
         ctx.reply(res.text, res.keyboard);
     });
 
-    bot.hears(new RegExp('.*'), async (ctx, next) => {
+    bot.hears(new RegExp("manage '([a-zA-Z0-9\\s\\-]{3,20})' course"), async (ctx) => {
         const chatId = ctx.chat.id;
-        const ownCourses = await classroomService.getAllOwnCourses(chatId);
+        const courseName = ctx.match[1];
 
-        if (ownCourses.map(course => course.name).includes(ctx.message.text)) {
-            const ownerId = await classroomService.getOwnerIdFromUserProfile(chatId);
-            const ownCourse = ownCourses.find(course => course.name === ctx.message.text) as ICourseInfo;
+        const res = await botService.getMaterialsFromCourse(chatId, courseName, CourseActions.MANAGE);
+        sendMaterials(res, ctx);
+        const botRes = botService.getCreateTaskResponse(courseName);
+        await ctx.reply(botRes.text, botRes.keyboard);
+    });
 
-            if (ownCourse.ownerId === ownerId) {
-                const res = await botService.manageProvidedCourse(chatId, ownCourse);
-                res.map(
-                    ({ text, keyboard }) => ctx.reply(text, keyboard)
-                );
-                return;
+    bot.hears(new RegExp("view '([a-zA-Z0-9\\s\\-]{3,20})' course"), async (ctx) => {
+        const chatId = ctx.chat.id;
+        const courseName = ctx.match[1];
 
-            } else {
-                throw new Error("You don't have access to interact with this course")
-            }
-        }
-
-        const courses = await classroomService.getAllAvailableCourses(chatId);
-        if (courses.map(course => course.name).includes(ctx.message.text)) {
-
-            const course = courses.find(course => course.name === ctx.message.text) as ICourseInfo;
-            const res = await botService.getAllMaterialsResponse(chatId, course);
-
-            if (Array.isArray(res)) {
-                res.map(
-                    ({ text, keyboard }) => ctx.reply(text, keyboard)
-                );
-
-            } else {
-                ctx.reply(res.text, res.keyboard);
-            }
-        }
-
-        return next();
+        const res = await botService.getMaterialsFromCourse(chatId, courseName, CourseActions.VIEW);
+        sendMaterials(res, ctx);
     });
 
     bot.hears(new RegExp("^Yes, I'd like to review all materials from (.+) course$"), async (ctx) => {
@@ -89,7 +69,7 @@ export const botController = (bot: Telegraf) => {
 
     bot.hears('No, back to courses', async (ctx) => {
         const chatId = ctx.chat.id;
-        const res = await botService.getAvailableCoursesResponse(chatId);
+        const res = await botService.getCourseResponse(chatId, CourseActions.VIEW);
         ctx.reply(res.text, res.keyboard);
     });
 
@@ -126,5 +106,20 @@ export const botController = (bot: Telegraf) => {
 
         const res = await botService.setNotification(chatId, materialId, courseId, day, month, hour, minute);
         await ctx.reply(res.text);
-    })
+    });
+
+    bot.hears(new RegExp("^Create task for '([a-zA-Z0-9\\s\\-]{3,20})' course$"), async (ctx) => {
+        botService.createTask(ctx);
+    });
+}
+
+async function sendMaterials(botResponse: IBotResponse | IBotResponse[], ctx: Context) {
+    if (Array.isArray(botResponse)) {
+        botResponse.map(
+            async ({ text, keyboard }) => await ctx.reply(text, keyboard)
+        );
+
+    } else {
+        await ctx.reply(botResponse.text, botResponse.keyboard);
+    }
 }

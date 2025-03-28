@@ -63,17 +63,19 @@ export const classroomService = {
         ];
 
         const customMaterials = allMaterials
-            .map(material => ({
-                id: material.id as string,
-                courseId: material.courseId as string,
-                title: 'title' in material ? material.title : '',
-                description: 'description' in material ? material.description : '',
-                link: material.alternateLink as string,
-                creationTime: material.creationTime as string,
-                type: material.type,
-                dueDate: material.dueDate,
-                dueTime: material.dueTime
-            }) as IMaterial);
+            .map(material => {
+                return ({
+                    id: material.id as string,
+                    courseId: material.courseId as string,
+                    title: 'title' in material ? material.title : '',
+                    description: 'description' in material ? material.description : '',
+                    link: material.alternateLink as string,
+                    creationTime: material.creationTime as string,
+                    type: material.type,
+                    dueDate: material.dueDate,
+                    dueTime: material.dueTime
+                }) as IMaterial
+            });
 
         if (lastTimeRetrieved) {
             const filteredCustomMaterials = customMaterials
@@ -93,6 +95,52 @@ export const classroomService = {
     getOwnerIdFromCourse: async (chatId: number | undefined, courseId: number): Promise<string> => {
         const classroom = await getClassroom(chatId);
         return (await classroom.courses.get({ id: courseId.toString() })).data.ownerId as string;
+    },
+
+    createTask: async (chatId: number | undefined, courseName: string, taskProps: {
+        title: string,
+        description?: string,
+        dueDate?: classroom_v1.Schema$Date,
+        dueTime?: classroom_v1.Schema$TimeOfDay,
+        maxPoints?: number
+    }): Promise<string> => {
+
+        const classroom = await getClassroom(chatId);
+        const course = await getCourseByName(chatId, courseName);
+
+        if (!course) {
+            throw new Error("We couldn't find the course by provided name. Please, make sure the course name is correct.");
+        }
+
+        const requestBody = {
+            title: taskProps.title,
+            state: "PUBLISHED",
+            maxPoints: 100,
+            workType: 'ASSIGNMENT',
+        }
+
+        if (taskProps.dueDate) {
+            Object.assign(requestBody, { dueDate: taskProps.dueDate });
+        }
+
+        if (taskProps.dueTime) {
+            Object.assign(requestBody, { dueTime: taskProps.dueTime });
+        }
+
+        if (taskProps.description) {
+            Object.assign(requestBody, { description: taskProps.description });
+        }
+
+        if (taskProps.maxPoints && taskProps.maxPoints > 0) {
+            Object.assign(requestBody, { maxPoints: taskProps.maxPoints });
+        }
+
+        const createdTask = await classroom.courses.courseWork.create({
+            courseId: course.id as string,
+            requestBody
+        });
+
+        return createdTask.data.alternateLink as string;
     },
 
     //edit
@@ -175,6 +223,10 @@ export const classroomService = {
 
     getCourseWorkTitleById: async (chatId: number, courseId: string, courseWorkId: string): Promise<string | null | undefined> => {
         return (await getCourseWorkById(chatId, courseId, courseWorkId)).title;
+    },
+
+    getCourseIdByName: async (chatId: number | undefined, courseName: string): Promise<string | null | undefined> => {
+        return (await getCourseByName(chatId, courseName))?.id;
     }
 }
 
@@ -235,4 +287,10 @@ async function getCourseWorkById(chatId: number | undefined, courseId: string, c
         id: courseWorkId,
         courseId
     })).data;
+}
+
+async function getCourseByName(chatId: number | undefined, courseName: string): Promise<classroom_v1.Schema$Course | undefined> {
+    const classroom = await getClassroom(chatId);
+    const courses = (await classroom.courses.list()).data.courses;
+    return courses?.find(course => course.name === courseName);
 }
