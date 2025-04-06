@@ -1,7 +1,7 @@
 import { gaxios } from "google-auth-library";
 import { Context } from "telegraf";
 import { MaybePromise } from "telegraf/typings/core/helpers/util";
-import { getInlineKeyboardWithAuthorisation } from "../../bot/botService";
+import { getInlineKeyboardWithAuthorisation } from "../../bot/classroomHelper/classroomHelperService";
 
 export const errorHandler = (error: any, ctx: Context): MaybePromise<void> => {
     let message = error.message || 'Internal Server Error';

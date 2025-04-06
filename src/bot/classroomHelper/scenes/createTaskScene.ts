@@ -1,5 +1,5 @@
 import { Scenes } from "telegraf";
-import { ICreateTaskContext } from "../../api/types/CustomContext";
+import { ICreateTaskContext } from "../../../api/types/CustomContext";
 
 let title: string;
 let description: string;

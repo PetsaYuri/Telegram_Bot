@@ -9,7 +9,7 @@ import { ENV } from './config/zod/env';
 import path from 'path';
 import { errorHandler } from './api/middleware/errorHandler';
 import { manageInactiveUsersScheduler } from './api/services/userService';
-import { createTaskWizardScene } from './bot/scenes/createTaskScene';
+import { createTaskWizardScene } from './bot/classroomHelper/scenes/createTaskScene';
 import { ICreateTaskContext } from './api/types/CustomContext';
 
 dotenv.config();
