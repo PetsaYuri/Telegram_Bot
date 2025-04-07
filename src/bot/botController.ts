@@ -1,6 +1,7 @@
 import { Scenes, Telegraf } from 'telegraf';
 import { botService } from './botService';
 import { classroomHelperCommands } from './classroomHelper/classroomHelperController';
+import { aiChatCommands } from './aiChat/aiChatController';
 
 export const botController = (bot: Telegraf<Scenes.SceneContext>) => {
 
@@ -10,5 +11,6 @@ export const botController = (bot: Telegraf<Scenes.SceneContext>) => {
         ctx.reply(res.text, res.keyboard);
     });
 
+    aiChatCommands(bot);
     classroomHelperCommands(bot);
 }

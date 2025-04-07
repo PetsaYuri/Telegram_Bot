@@ -47,6 +47,11 @@ const envSchema = zod.object({
 
     SECRET_KEY_FOR_USER_INFO: zod.string().refine(
         key => key.length === 64
+    ),
+
+    GOOGLE_GEMINI_API_KEY: zod.string().refine(
+        key => key.length === 39 && key.startsWith('AIzaSy'),
+        'Invalid Google Gemini API key'
     )
 });
 
