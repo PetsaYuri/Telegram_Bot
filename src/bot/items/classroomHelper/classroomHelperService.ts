@@ -1,17 +1,17 @@
 import { Markup } from "telegraf";
 import { InlineKeyboardMarkup, ReplyKeyboardMarkup } from "telegraf/typings/core/types/typegram";
-import { classroomService } from "../../api/services/classroomService";
-import { IBotResponse } from "../../api/types/CustomBotResponse";
-import User from "../../api/models/users";
-import { ICourseInfo } from "../../api/types/CustomCourseInfo";
-import Course, { ICourse } from "../../api/models/courses";
-import { IMaterial } from "../../api/types/CustomMaterial";
-import { ENV } from "../../config/zod/env";
+import { classroomService } from "./classroomService";
+import { IBotResponse } from "../../types/CustomBotResponse";
+import User from "../../../api/models/users";
+import Course, { ICourse } from "../../../api/models/courses";
+import { ENV } from "../../../config/zod/env";
 import { classroom_v1 } from "@googleapis/classroom";
 import cron from 'node-cron';
-import { bot } from "../..";
-import { ICreateTaskSession } from "../../api/types/CustomSession";
-import { CourseActions } from "../../api/enums/CourseActions";
+import { bot } from "../../..";
+import { CourseActions } from "./enums/CourseActions";
+import { ICourseInfo } from "./types/CustomCourseInfo";
+import { IMaterial } from "./types/CustomMaterial";
+import { ICreateTaskSession } from "./types/CustomSession";
 
 export const classroomHelperService = {
 
@@ -40,7 +40,7 @@ export const classroomHelperService = {
         return ({ text: 'Follow the next link for authorisation via google account', keyboard });
     },
 
-    getCourseResponse: async (chatId: number, action: CourseActions): Promise<IBotResponse> => {
+    getCourseResponse: async (chatId: number | undefined, action: CourseActions): Promise<IBotResponse> => {
         let courses;
         switch (action) {
             case CourseActions.MANAGE:
@@ -56,7 +56,7 @@ export const classroomHelperService = {
         return getBotResponseWithCourses(courses, action);
     },
 
-    getAllMaterialsResponse: async (chatId: number, course: ICourseInfo, withUserLastTimeRetrieved: boolean = true): Promise<IBotResponse | IBotResponse[]> => {
+    getAllMaterialsResponse: async (chatId: number | undefined, course: ICourseInfo, withUserLastTimeRetrieved: boolean = true): Promise<IBotResponse | IBotResponse[]> => {
         const user = await User.findOne({ chatId });
         if (!await Course.exists({ courseId: course.id, user })) {
             const newCourse = new Course({ courseId: course.id, title: course.name, user });
@@ -94,7 +94,7 @@ export const classroomHelperService = {
         return arr.length === 0 ? ({ text: text as string, keyboard: keyboard as Markup.Markup<ReplyKeyboardMarkup> }) : arr;
     },
 
-    getMaterialsFromCourse: async (chatId: number, courseName: string, action: CourseActions): Promise<IBotResponse | IBotResponse[]> => {
+    getMaterialsFromCourse: async (chatId: number | undefined, courseName: string, action: CourseActions): Promise<IBotResponse | IBotResponse[]> => {
         const courses = await getCourseByAction(chatId, action);
         const ownerId = await classroomService.getOwnerIdFromUserProfile(chatId);
 
@@ -136,9 +136,8 @@ export const classroomHelperService = {
         return ({ text: 'Your materials from the selected course:', keyboard })
     },
 
-    createTask: (ctx: any): void => {
+    createTask: (ctx: any, courseName: string): void => {
         const chatId = ctx.chat?.id as number;
-        const courseName = ctx.match[1];
         getTaskPropertiesFromUser(ctx).then(async res => {
             const taskProps = {
                 title: res.state.title as string
@@ -328,7 +327,7 @@ function getInlineKeyboardWithURI(text: string, uri: string): Markup.Markup<Inli
     ]);
 }
 
-async function getCourseByAction(chatId: number, action: CourseActions): Promise<ICourseInfo[]> {
+async function getCourseByAction(chatId: number | undefined, action: CourseActions): Promise<ICourseInfo[]> {
     switch (action) {
         case CourseActions.VIEW:
             return await classroomService.getAllAvailableCourses(chatId);

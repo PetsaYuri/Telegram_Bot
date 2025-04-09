@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { ENV } from "../../config/zod/env";
+import { ENV } from "../../../config/zod/env";
 import { marked } from "marked";
 
 const genAI = new GoogleGenerativeAI(ENV.GOOGLE_GEMINI_API_KEY);

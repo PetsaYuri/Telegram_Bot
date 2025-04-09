@@ -1,3 +1,5 @@
+import { Scenes } from "telegraf"
+
 export interface ICreateTaskSession {
     cursor: number,
     state: {

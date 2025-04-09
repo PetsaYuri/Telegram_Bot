@@ -4,7 +4,7 @@ import Course from '../models/courses';
 import User from '../models/users';
 import { ENV } from '../../config/zod/env';
 import { gaxios } from 'google-auth-library';
-import { classroomService } from './classroomService';
+import { classroomService } from '../../bot/items/classroomHelper/classroomService';
 
 export function encryptUserData(text: string): string {
     const iv = crypto.randomBytes(16);

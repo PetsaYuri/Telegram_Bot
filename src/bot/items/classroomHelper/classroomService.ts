@@ -1,10 +1,10 @@
-import User from "../models/users";
-import { OAUTH2_CLIENT } from "./authService";
-import { IMaterial } from "../types/CustomMaterial";
-import { ICourseInfo } from "../types/CustomCourseInfo";
-import { MaterialTypes } from "../enums/MaterialTypes";
+import User from "../../../api/models/users";
+import { OAUTH2_CLIENT } from "../../../api/services/authService";
+import { IMaterial } from "./types/CustomMaterial";
+import { ICourseInfo } from "./types/CustomCourseInfo";
+import { MaterialTypes } from "./enums/MaterialTypes";
 import { classroom_v1 } from "@googleapis/classroom";
-import { decryptUserData } from "./userService";
+import { decryptUserData } from "../../../api/services/userService";
 
 export const classroomService = {
 
@@ -44,7 +44,7 @@ export const classroomService = {
             }) as ICourseInfo);
     },
 
-    getAllMaterials: async (chatId: number, courseId: string, lastTimeRetrieved?: Date): Promise<(IMaterial)[]> => {
+    getAllMaterials: async (chatId: number | undefined, courseId: string, lastTimeRetrieved?: Date): Promise<(IMaterial)[]> => {
         const classroom = await getClassroom(chatId);
 
         const courseWorks = (await classroom.courses.courseWork.list({ courseId: courseId.toString() })).data.courseWork;
@@ -143,7 +143,6 @@ export const classroomService = {
         return createdTask.data.alternateLink as string;
     },
 
-    //edit
     editMaterial: async (chatId: number | undefined, courseId: string, materialId: string): Promise<string> => {
         const classroom = await getClassroom(chatId);
         const message = 'successfully edit';

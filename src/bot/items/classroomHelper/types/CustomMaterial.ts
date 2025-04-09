@@ -1,5 +1,5 @@
 import { classroom_v1 } from "@googleapis/classroom";
-import { MaterialTypes } from "../enums/MaterialTypes";
+import { MaterialTypes } from ".././enums/MaterialTypes";
 
 export interface IMaterial {
     id: string,
