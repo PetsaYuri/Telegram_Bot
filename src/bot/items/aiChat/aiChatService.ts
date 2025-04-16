@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { ENV } from "../../../config/zod/env";
 import { marked } from "marked";
+import { aiChatModels } from "./enums/aiChatModels";
 
 const genAI = new GoogleGenerativeAI(ENV.GOOGLE_GEMINI_API_KEY);
 
@@ -10,8 +11,8 @@ export const aiChatService = {
         return "Welcome to AI Chat! How can I assist you today?";
     },
 
-    getAnswerFromPrompt: async (prompt: string, fileLinks?: Array<URL>): Promise<string> => {
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+    getAnswerFromPrompt: async (prompt: string, fileLinks?: Array<URL>, modelType: aiChatModels = aiChatModels.GEMINI_1_5_FLASH): Promise<string> => {
+        const model = genAI.getGenerativeModel({ model: modelType }) //
         let result;
 
         if (fileLinks) {
@@ -27,7 +28,7 @@ export const aiChatService = {
             result = await model.generateContent(prompt);
         }
 
-        return markdownToHtml(result.response.text());
+        return result.response.text();
     },
 
     getAnswerFromVoice: async (voice: URL): Promise<string> => {
@@ -37,11 +38,11 @@ export const aiChatService = {
         ]
 
         const result = await model.generateContent([...voicePart]);
-        return markdownToHtml(result.response.text());
+        return result.response.text();
     }
 }
 
-function markdownToHtml(text: string): string {
+export function markdownToHtml(text: string): string {
     const html = marked(text);
     return html.toString()
         .replace(/<\/?p>/g, '\n')

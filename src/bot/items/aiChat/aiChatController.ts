@@ -1,5 +1,5 @@
 import { Scenes } from "telegraf";
-import { aiChatService, getFileLinksFromContext } from "./aiChatService";
+import { aiChatService, getFileLinksFromContext, markdownToHtml } from "./aiChatService";
 
 export const aiChatController = async (ctx: any) => {
     const messageType = getMessageType(ctx.message);
@@ -55,7 +55,8 @@ async function processingAiAssistantMessage(ctx: Scenes.SceneContext) {
 }
 
 async function sendResponseInHtml(response: string, ctx: Scenes.SceneContext) {
-    await ctx.reply(response, {
+    const text = markdownToHtml(response);
+    await ctx.reply(text, {
         parse_mode: "HTML"
     });
 }

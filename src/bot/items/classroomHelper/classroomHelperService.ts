@@ -11,7 +11,7 @@ import { bot } from "../../..";
 import { CourseActions } from "./enums/CourseActions";
 import { ICourseInfo } from "./types/CustomCourseInfo";
 import { IMaterial } from "./types/CustomMaterial";
-import { ICreateTaskSession } from "./types/CustomSession";
+import { ICreateTaskSession } from "./types/ICreateTaskSession";
 
 export const classroomHelperService = {
 

@@ -10,7 +10,9 @@ import path from 'path';
 import { errorHandler } from './api/middleware/errorHandler';
 import { manageInactiveUsersScheduler } from './api/services/userService';
 import { createTaskWizardScene } from './bot/items/classroomHelper/scenes/createTaskScene';
-import { ICreateTaskContext } from './bot/items/classroomHelper/types/CustomContext';
+import { createTestWizardScene } from './bot/items/testing/scenes/createTestScene';
+import { passTestWizardScene } from './bot/items/testing/scenes/passTestScene';
+import { ISceneContext } from './bot/types/ISceneContext';
 
 dotenv.config();
 mongoose.connect(ENV.MONGODB_URI);
@@ -20,9 +22,14 @@ const BOT_TOKEN = ENV.BOT_TOKEN;
 export const bot = new Telegraf<Scenes.SceneContext>(BOT_TOKEN);
 
 //stages
-const createTaskStage = new Scenes.Stage<ICreateTaskContext>([createTaskWizardScene]);
+const stage = new Scenes.Stage<ISceneContext>([
+    createTaskWizardScene,
+    createTestWizardScene,
+    passTestWizardScene
+]);
+
 bot.use(session());
-bot.use(createTaskStage.middleware() as MiddlewareFn<Context>);
+bot.use(stage.middleware() as MiddlewareFn<Context>)
 
 botController(bot);
 bot.launch();

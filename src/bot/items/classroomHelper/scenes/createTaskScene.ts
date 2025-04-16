@@ -1,5 +1,5 @@
 import { Scenes } from "telegraf";
-import { ICreateTaskContext } from "../types/CustomContext";
+import { ISceneContext } from "../../../types/ISceneContext";
 
 let title: string;
 let description: string;
@@ -7,7 +7,7 @@ let dueDate: string | undefined;
 let dueTime: string | undefined;
 let maxPoints: string | undefined;
 
-export const createTaskWizardScene = new Scenes.WizardScene<ICreateTaskContext>('CREATE_TASK',
+export const createTaskWizardScene = new Scenes.WizardScene<ISceneContext>('CREATE_TASK',
     async (ctx) => {
         const question = 'Enter a title:';
         await ctx.reply(question);

@@ -2,6 +2,7 @@ import { Scenes, Telegraf } from 'telegraf';
 import { botService, getMode, setMode } from './botService';
 import { aiChatController } from './items/aiChat/aiChatController';
 import { classroomHelperController } from './items/classroomHelper/classroomHelperController';
+import { testingController } from './items/testing/testingController';
 
 export const botController = (bot: Telegraf<Scenes.SceneContext>) => {
 
@@ -30,19 +31,35 @@ export const botController = (bot: Telegraf<Scenes.SceneContext>) => {
                     setMode(ctx.session.__scenes, 'Testing');
                     break;
             }
+
+            mode = getMode(ctx.session.__scenes);
         }
 
-        mode = getMode(ctx.session.__scenes);
-
-        switch (mode) {
-            case 'AI Assistant':
-                await aiChatController(ctx);
-                break;
-            case 'Classroom Helper':
-                await classroomHelperController(ctx);
-                break;
-            default:
-                await ctx.reply("Unknown command. Please try again.")
-        }
+        await passContextToItemControllers(ctx);
     });
+
+    bot.on('callback_query', async (ctx) => {
+        await passContextToItemControllers(ctx);
+    })
+}
+
+async function passContextToItemControllers(ctx: any) {
+    const mode = getMode(ctx.session.__scenes);
+
+    switch (mode) {
+        case 'AI Assistant':
+            await aiChatController(ctx);
+            break;
+
+        case 'Classroom Helper':
+            await classroomHelperController(ctx);
+            break;
+
+        case 'Testing':
+            await testingController(ctx);
+            break;
+
+        default:
+            await ctx.reply("Unknown command. Please try again.")
+    }
 }

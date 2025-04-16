@@ -1,22 +1,32 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
-import User, { IUser } from "./users";
-import Question, { IQuestion } from "./questions";
+import { TestTypes } from "../../bot/items/testing/enums/testTypes";
 
 export interface ITest extends Document {
-    name: string,
-    creator: IUser,
-    questions: Array<IQuestion>
+    title: string,
+    chatId: number,
+    type: TestTypes,
+    questions: Map<string, string>
 }
 
 const testSchema: Schema<ITest> = new Schema({
-    name: String,
-    creator: {
-        ref: User
+    title: String,
+
+    chatId: {
+        type: Number,
+        required: true,
     },
-    questions: [{
-        type: mongoose.Types.ObjectId,
-        ref: Question
-    }]
+
+    type: {
+        type: String,
+        enum: TestTypes,
+        required: true,
+    },
+
+    questions: {
+        type: Map,
+        of: String,
+        required: true
+    }
 });
 
 const Test: Model<ITest> = mongoose.model('Test', testSchema);
