@@ -10,7 +10,7 @@ export const botController = (bot: Telegraf<Scenes.SceneContext>) => {
         const chatId = ctx.chat.id;
         const res = await botService.getMainMenuResponse(chatId);
         setMode(ctx.session.__scenes, null);
-        ctx.reply(res.text, res.keyboard);
+        await ctx.reply(res.text, res.keyboard);
     });
 
     bot.on('message', async (ctx) => {

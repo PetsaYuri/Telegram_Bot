@@ -5,7 +5,8 @@ export interface ITest extends Document {
     title: string,
     chatId: number,
     type: TestTypes,
-    questions: Map<string, string>
+    questions: { [key: string]: string | string[] },
+    rightAnswers: { [key: string]: string }
 }
 
 const testSchema: Schema<ITest> = new Schema({
@@ -23,9 +24,13 @@ const testSchema: Schema<ITest> = new Schema({
     },
 
     questions: {
-        type: Map,
-        of: String,
+        type: Schema.Types.Mixed,
         required: true
+    },
+
+    rightAnswers: {
+        type: Schema.Types.Mixed,
+        required: false
     }
 });
 
