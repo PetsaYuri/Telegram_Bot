@@ -5,7 +5,10 @@ export const testingController = async (ctx: any) => {
     const text = ctx.text;
 
     switch (text) {
+
         case 'Testing':
+        case '/testing':
+        case 'back to tests':
             const chatId = ctx.chat?.id as number;
             const res = await testingService.getMenuResponse(chatId);
             await ctx.reply(res.text, res.keyboard);
@@ -19,7 +22,7 @@ export const testingController = async (ctx: any) => {
 
             const callbackData = ctx?.callbackQuery.data;
             if (!callbackData && !text) {
-                return await ctx.reply("Text is undefined. Please try again.");
+                return await ctx.reply("Unknown command. Please try again.");
             }
 
             const passTestMatch = callbackData.match('^pass test id=([a-f\\d]{24})$');

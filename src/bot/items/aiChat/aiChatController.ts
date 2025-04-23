@@ -13,7 +13,7 @@ export const aiChatController = async (ctx: any) => {
                 return ctx.reply('You need to enter some text');
             }
 
-            else if (text === 'AI Assistant') {
+            else if (text === 'AI Assistant' || text === '/ai_assistant') {
                 await processingAiAssistantMessage(ctx);
             }
 

@@ -1,6 +1,7 @@
 import { Markup } from "telegraf";
 import { IBotResponse } from "./types/CustomBotResponse";
 import { SceneSessionData } from "telegraf/typings/scenes";
+import { ModeTypes } from "./types/ModeTypes";
 
 export const botService = {
 
@@ -28,7 +29,7 @@ export function getMode(scenes: SceneSessionData | undefined): string | null {
     return null;
 }
 
-export function setMode(scenes: SceneSessionData | undefined, mode: string | null): void {
+export function setMode(scenes: SceneSessionData | undefined, mode: ModeTypes | null): void {
     if (!scenes) return;
 
     if (!scenes.state) {

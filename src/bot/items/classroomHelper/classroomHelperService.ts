@@ -191,7 +191,7 @@ export const classroomHelperService = {
 
             const link = await classroomService.createTask(chatId, courseName, taskProps);
             await ctx.reply('successfully created', getInlineKeyboardWithURI('View in browser', link));
-            await ctx.reply('choose the next action:', getReplyKeyboardButton(`Return to your '${courseName}' course`));
+            await ctx.reply('choose the next action:', getReplyKeyboardButton(`manage '${courseName}' course`));
         });
     },
 

@@ -91,8 +91,13 @@ export const testingService = {
                     throw new Error('Incorrect test type')
             }
 
-            await ctx.reply(`The '${createdTest.title}' test has been successfully created!`);
-            testingService.getMenuResponse(chatId);
+            const keyboard = Markup.keyboard([
+                ['back to tests']
+            ])
+                .resize()
+                .oneTime()
+
+            await ctx.reply(`The '${createdTest.title}' test has been successfully created!`, keyboard);
         })
     },
 

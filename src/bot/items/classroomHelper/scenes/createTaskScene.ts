@@ -1,42 +1,53 @@
 import { Scenes } from "telegraf";
 import { ISceneContext } from "../../../types/ISceneContext";
+import { ModeTypes } from "../../../types/ModeTypes";
 
-let title: string;
-let description: string;
-let dueDate: string | undefined;
-let dueTime: string | undefined;
-let maxPoints: string | undefined;
+interface ICreateTaskState {
+    title: string,
+    description: string,
+    dueDate: string | undefined,
+    dueTime: string | undefined,
+    maxPoints: string | undefined
+}
 
 export const createTaskWizardScene = new Scenes.WizardScene<ISceneContext>('CREATE_TASK',
     async (ctx) => {
         const question = 'Enter a title:';
         await ctx.reply(question);
+
         return ctx.wizard.next();
     },
 
     async (ctx) => {
-        title = ctx.text as string;
+        const state = getState(ctx);
+        state.title = ctx.text as string;
+
         await ctx.reply('Enter a description (optional)');
         return ctx.wizard.next();
     },
 
     async (ctx) => {
-        description = ctx.text as string;
+        const state = getState(ctx);
+        state.description = ctx.text as string;
+
         await ctx.reply("Enter a maximum score (enter '-' if you don't want to change the default (100)).");
         return ctx.wizard.next();
     },
 
     async (ctx) => {
-        maxPoints = ctx.text as string;
+        const state = getState(ctx);
+        state.maxPoints = ctx.text as string;
+
         await ctx.reply("Enter a due date (enter '-' if don't need to). Format: dd.mm.yyyy");
         return ctx.wizard.next();
     },
 
     async (ctx) => {
-        dueDate = ctx.text as string;
+        const state = getState(ctx);
+        state.dueDate = ctx.text as string;
 
-        if (dueDate === '-') {
-            await earlyLeave(ctx);
+        if (state.dueDate === '-') {
+            await leaveFromScene(ctx);
             return;
         }
 
@@ -45,15 +56,29 @@ export const createTaskWizardScene = new Scenes.WizardScene<ISceneContext>('CREA
     },
 
     async (ctx) => {
-        dueTime = ctx.text as string;
-        ctx.session.__scenes = { cursor: NaN, state: { title, description, dueDate, dueTime, maxPoints } };
-        return ctx.scene.leave();
+        const state = getState(ctx);
+        state.dueTime = ctx.text as string;
+
+        await leaveFromScene(ctx);
     }
 );
 
-async (ctx: any) => earlyLeave(ctx);
+async function leaveFromScene(ctx: any) {
+    const state = getState(ctx);
+    ctx.session.__scenes = {
+        cursor: NaN, state: {
+            title: state.title,
+            description: state.description,
+            dueDate: state.dueDate,
+            dueTime: state.dueTime,
+            maxPoints: state.maxPoints,
+            mode: ModeTypes.CLASSROOM_HELPER
+        }
+    };
 
-async function earlyLeave(ctx: any) {
-    ctx.session.__scenes = { cursor: NaN, state: { title, description, dueDate, dueTime, maxPoints } };
     return ctx.scene.leave();
+}
+
+function getState(ctx: any): ICreateTaskState {
+    return ctx.scene.state;
 }

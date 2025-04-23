@@ -3,12 +3,14 @@ import { botService, getMode, setMode } from './botService';
 import { aiChatController } from './items/aiChat/aiChatController';
 import { classroomHelperController } from './items/classroomHelper/classroomHelperController';
 import { testingController } from './items/testing/testingController';
+import { ModeTypes } from './types/ModeTypes';
 
 export const botController = (bot: Telegraf<Scenes.SceneContext>) => {
 
-    bot.hears('/menu', async (ctx) => {
+    bot.hears(['/menu', '/back'], async (ctx) => {
         const chatId = ctx.chat.id;
         const res = await botService.getMainMenuResponse(chatId);
+
         setMode(ctx.session.__scenes, null);
         await ctx.reply(res.text, res.keyboard);
     });
@@ -20,15 +22,18 @@ export const botController = (bot: Telegraf<Scenes.SceneContext>) => {
         if (!mode) {
             switch (text) {
                 case 'AI Assistant':
-                    setMode(ctx.session.__scenes, 'AI Assistant');
+                case '/ai_assistant':
+                    setMode(ctx.session.__scenes, ModeTypes.AI_ASSISTANT);
                     break;
 
                 case 'Classroom Helper':
-                    setMode(ctx.session.__scenes, 'Classroom Helper');
+                case '/classroom_helper':
+                    setMode(ctx.session.__scenes, ModeTypes.CLASSROOM_HELPER);
                     break;
 
                 case 'Testing':
-                    setMode(ctx.session.__scenes, 'Testing');
+                case '/testing':
+                    setMode(ctx.session.__scenes, ModeTypes.TESTING);
                     break;
             }
 
@@ -47,15 +52,15 @@ async function passContextToItemControllers(ctx: any) {
     const mode = getMode(ctx.session.__scenes);
 
     switch (mode) {
-        case 'AI Assistant':
+        case ModeTypes.AI_ASSISTANT:
             await aiChatController(ctx);
             break;
 
-        case 'Classroom Helper':
+        case ModeTypes.CLASSROOM_HELPER:
             await classroomHelperController(ctx);
             break;
 
-        case 'Testing':
+        case ModeTypes.TESTING:
             await testingController(ctx);
             break;
 

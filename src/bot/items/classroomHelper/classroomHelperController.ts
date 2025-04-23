@@ -5,11 +5,13 @@ import { classroomHelperService } from './classroomHelperService'
 import { IBotResponse } from '../../types/CustomBotResponse';
 import { CourseActions } from './enums/CourseActions';
 
-export const classroomHelperController = async (ctx: Scenes.SceneContext) => {
+export const classroomHelperController = async (ctx: any) => {
     const text = ctx.text;
 
     switch (text) {
+
         case 'Classroom Helper':
+        case '/classroom_helper':
             await processingClassroomHelperMessage(ctx);
             break;
 
@@ -30,32 +32,37 @@ export const classroomHelperController = async (ctx: Scenes.SceneContext) => {
             break;
 
         default:
-
-            if (!text) {
-                return await ctx.reply("Test is undefined. Please try again.");
-            }
-
             const manageCourseMatch = text.match("^manage '([a-zA-Z0-9\\s\\-]{3,20})' course$")
             const viewCourseMatch = text.match("^view '([a-zA-Z0-9\\s\\-]{3,20})' course$")
             const allMatFromCourseMatch = text.match("^Yes, I'd like to review all materials from (.+) course$");
-            const editMaterialMatch = text.match('^edit materialId=(\\d{12}), courseId=(\\d{12})$');
-            const deleteMaterialMatch = text.match('^delete materialId=(\\d{12}), courseId=(\\d{12})$');
-            const setNotificationMatch = text.match('^notif mat=(\\d{12}) course=(\\d{12}) date=(\\d{2}):(\\d{2}):(\\d{4})T(?:(\\d{2}):(\\d{2}))?$');
             const createTaskMatch = text.match("^Create task for '([a-zA-Z0-9\\s\\-]{3,20})' course$");
 
             if (manageCourseMatch) {
-                await processingManageCourseMessage(ctx, manageCourseMatch);
+                return await processingManageCourseMessage(ctx, manageCourseMatch);
             }
 
             else if (viewCourseMatch) {
-                await processingViewCourseMessage(ctx, viewCourseMatch);
+                return await processingViewCourseMessage(ctx, viewCourseMatch);
             }
 
             else if (allMatFromCourseMatch) {
-                await processingAllMatFromCourseMessage(ctx, allMatFromCourseMatch);
+                return await processingAllMatFromCourseMessage(ctx, allMatFromCourseMatch);
             }
 
-            else if (editMaterialMatch) {
+            else if (createTaskMatch) {
+                return await processingCreateTaskMessage(ctx, createTaskMatch);
+            }
+
+            const callbackData = ctx?.callbackQuery.data;
+            if (!callbackData && !text) {
+                return await ctx.reply("Unknown command. Please try again.");
+            }
+
+            const editMaterialMatch = callbackData.match('^edit materialId=(\\d{12}), courseId=(\\d{12})$');
+            const deleteMaterialMatch = callbackData.match('^delete materialId=(\\d{12}), courseId=(\\d{12})$');
+            const setNotificationMatch = callbackData.match('^notif mat=(\\d{12}) course=(\\d{12}) date=(\\d{2}):(\\d{2}):(\\d{4})T(?:(\\d{2}):(\\d{2}))?$');
+
+            if (editMaterialMatch) {
                 await processingEditMaterialMessage(ctx, editMaterialMatch);
             }
 
@@ -65,10 +72,6 @@ export const classroomHelperController = async (ctx: Scenes.SceneContext) => {
 
             else if (setNotificationMatch) {
                 await processingSetNotificationMessage(ctx, setNotificationMatch);
-            }
-
-            else if (createTaskMatch) {
-                await processingCreateTaskMessage(ctx, createTaskMatch);
             }
 
             else {

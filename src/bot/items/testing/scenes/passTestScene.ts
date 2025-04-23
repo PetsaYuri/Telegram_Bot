@@ -2,8 +2,9 @@ import { Markup, Scenes } from "telegraf";
 import { ISceneContext } from "../../../types/ISceneContext";
 import { TestTypes } from "../enums/testTypes";
 import { getTest } from "../testingService";
+import { ModeTypes } from "../../../types/ModeTypes";
 
-export interface IPassTestState {
+interface IPassTestState {
     testId: string,
     testType: TestTypes,
     questions: Map<string, string | string[]>,
@@ -44,7 +45,12 @@ export const passTestWizardScene = new Scenes.WizardScene<ISceneContext>('PASS_T
         }
 
         if (state.index === state.questions.size) {
-            ctx.session.__scenes = { cursor: NaN, state: { answers } };
+            ctx.session.__scenes = {
+                cursor: NaN, state: {
+                    answers,
+                    mode: ModeTypes.TESTING
+                }
+            };
             return ctx.scene.leave();
         }
 
