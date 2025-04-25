@@ -13,6 +13,7 @@ import { createTaskWizardScene } from './bot/items/classroomHelper/scenes/create
 import { createTestWizardScene } from './bot/items/testing/scenes/createTestScene';
 import { passTestWizardScene } from './bot/items/testing/scenes/passTestScene';
 import { ISceneContext } from './bot/types/ISceneContext';
+import { editTaskWizardScene } from './bot/items/classroomHelper/scenes/editTaskScene';
 
 dotenv.config();
 mongoose.connect(ENV.MONGODB_URI);
@@ -24,6 +25,7 @@ export const bot = new Telegraf<Scenes.SceneContext>(BOT_TOKEN);
 //stages
 const stage = new Scenes.Stage<ISceneContext>([
     createTaskWizardScene,
+    editTaskWizardScene,
     createTestWizardScene,
     passTestWizardScene
 ]);

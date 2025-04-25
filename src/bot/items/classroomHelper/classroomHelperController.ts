@@ -147,12 +147,11 @@ async function processingBackToCoursesMessage(ctx: Scenes.SceneContext) {
 }
 
 async function processingEditMaterialMessage(ctx: any, match: RegExpMatchArray) {
-    const chatId = ctx.chat?.id;
     await ctx.answerCbQuery();
     const materialId = match[1];
     const courseId = match[2];
-    const res = await classroomHelperService.editMaterial(chatId, courseId, materialId);
-    await ctx.reply(res.text);
+
+    await classroomHelperService.editTask(ctx, courseId, materialId);
 }
 
 async function processingDeleteMaterialMessage(ctx: any, match: RegExpMatchArray) {

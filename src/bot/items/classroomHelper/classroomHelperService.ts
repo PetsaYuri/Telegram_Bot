@@ -11,7 +11,9 @@ import { bot } from "../../..";
 import { CourseActions } from "./enums/CourseActions";
 import { ICourseInfo } from "./types/CustomCourseInfo";
 import { IMaterial } from "./types/CustomMaterial";
-import { ICreateTaskSession } from "./types/ICreateTaskSession";
+import { ICreateTaskSession } from "./types/sessions/ICreateTaskSession";
+import { IEditTaskSession } from "./types/sessions/IEditTaskSession";
+import { ITask } from "./types/ITask";
 
 export const classroomHelperService = {
 
@@ -138,70 +140,34 @@ export const classroomHelperService = {
 
     createTask: (ctx: any, courseName: string): void => {
         const chatId = ctx.chat?.id as number;
-        getTaskPropertiesFromUser(ctx).then(async res => {
-            const taskProps = {
-                title: res.state.title as string
-            }
-
-            const description = res.state.description;
-            const dueDate = res.state.dueDate;
-            const dueTime = res.state.dueTime;
-            const maxPoints = res.state.maxPoints;
-
-            if (!taskProps.title) {
-                throw new Error('The title must be filled in')
-            }
-
-            if (description !== '-') {
-                Object.assign(taskProps, description);
-            }
-
-            if (dueDate && dueDate !== '-') {
-                const splitedDate = dueDate.split('.', 3);
-                Object.assign(taskProps, {
-                    dueDate: {
-                        year: splitedDate[2],
-                        month: splitedDate[1],
-                        day: splitedDate[0]
-                    },
-                    dueTime: {
-                        hours: 0,
-                        minutes: 0
-                    }
-                });
-            }
-
-            if (dueTime && dueTime !== '-' && dueDate) {
-                const splitedTime = dueTime.split(':', 2);
-                Object.assign(taskProps, {
-                    dueTime: {
-                        hours: Number.parseInt(splitedTime[0]) - 2,
-                        minutes: splitedTime[1]
-                    }
-                });
-            }
-
-            if (maxPoints) {
-                let points = Number.parseInt(maxPoints);
-
-                if (points > 0) {
-                    Object.assign(taskProps, { maxPoints });
-                }
-            }
-
+        getTaskPropsFromUserForCreate(ctx).then(async res => {
+            const taskProps = setTaskProps(res.state);
             const link = await classroomService.createTask(chatId, courseName, taskProps);
+
             await ctx.reply('successfully created', getInlineKeyboardWithURI('View in browser', link));
             await ctx.reply('choose the next action:', getReplyKeyboardButton(`manage '${courseName}' course`));
         });
     },
 
-    editMaterial: async (chatId: number | undefined, courseId: string, materialId: string): Promise<IBotResponse> => {
-        const message = await classroomService.editMaterial(chatId, courseId, materialId)
-        return ({ text: message, keyboard: Markup.keyboard([]) });
+    editTask: async (ctx: any, courseId: string, taskId: string): Promise<void> => {
+        const chatId = ctx.chat?.id as number;
+        const task = await classroomService.getTask(chatId, courseId, taskId);
+        if (!task) {
+            throw new Error('You cannot edit the non-existent task');
+        }
+
+        getTaskPropsFromUserForEdit(ctx, task).then(async res => {
+            const taskProps = setTaskProps(res.state);
+            const link = await classroomService.editTask(chatId, courseId, taskId, taskProps);
+            await ctx.reply('successfully updated', getInlineKeyboardWithURI('View in browser', link));
+
+            const courseName = await classroomService.getCourseNameById(chatId, courseId);
+            await ctx.reply('choose the next action:', getReplyKeyboardButton(`manage '${courseName}' course`));
+        });
     },
 
     deleteMaterial: async (chatId: number | undefined, courseId: string, materialId: string): Promise<IBotResponse> => {
-        const message = await classroomService.deleteMaterial(chatId, courseId, materialId)
+        const message = await classroomService.deleteTask(chatId, courseId, materialId)
         return ({ text: message, keyboard: Markup.keyboard([]) });
     },
 
@@ -264,12 +230,20 @@ function addDueDateBtnInKeyboard(keyboard: Markup.Markup<InlineKeyboardMarkup>, 
     return Markup.inlineKeyboard(buttons);
 }
 
-function getFormattedDate(dueDate: classroom_v1.Schema$Date): string {
+export function getFormattedDate(dueDate?: classroom_v1.Schema$Date): string | undefined {
+    if (!dueDate) {
+        return '';
+    }
+
     const month = dueDate.month;
     return dueDate.day + ':' + (month && month < 10 ? '0' + month : month) + ':' + dueDate.year
 }
 
-function getFormattedTime(dueTime: classroom_v1.Schema$TimeOfDay): string {
+export function getFormattedTime(dueTime?: classroom_v1.Schema$TimeOfDay): string | undefined {
+    if (!dueTime) {
+        return '';
+    }
+
     let hoursStr;
     let hours = (dueTime.hours as number) + 2;
     if (hours < 10) {
@@ -308,17 +282,94 @@ function getReplyKeyboardButton(text: string): Markup.Markup<ReplyKeyboardMarkup
         .oneTime()
 }
 
-function getTaskPropertiesFromUser(ctx: any): Promise<ICreateTaskSession> {
+function getTaskPropsFromUserForCreate(ctx: any): Promise<ICreateTaskSession> {
     return new Promise((resolve) => {
         ctx.scene.enter('CREATE_TASK');
+
+        const checkState = setInterval(() => {
+
+            if (!ctx.wizard?.cursor) {
+                clearInterval(checkState);
+                resolve(ctx.session.__scenes);
+            }
+
+        }, 500)
+    })
+}
+
+function getTaskPropsFromUserForEdit(ctx: any, task: classroom_v1.Schema$CourseWork): Promise<IEditTaskSession> {
+    return new Promise((resolve) => {
+        ctx.scene.enter('EDIT_TASK', { task });
 
         const checkState = setInterval(() => {
             if (!ctx.wizard?.cursor) {
                 clearInterval(checkState);
                 resolve(ctx.session.__scenes);
             }
+
         }, 500)
     })
+}
+
+function setTaskProps(state: {
+    title?: string,
+    description?: string,
+    dueDate?: string,
+    dueTime?: string,
+    maxPoints?: string
+}): ITask {
+
+    const taskProps = {
+        title: state.title as string
+    }
+
+    const description = state.description;
+    const dueDate = state.dueDate;
+    const dueTime = state.dueTime;
+    const maxPoints = state.maxPoints;
+
+    if (!taskProps.title) {
+        throw new Error('The title must be filled in')
+    }
+
+    if (description !== '-') {
+        Object.assign(taskProps, { description });
+    }
+
+    if (dueDate && dueDate !== '-') {
+        const splitedDate = dueDate.split('.', 3);
+        Object.assign(taskProps, {
+            dueDate: {
+                year: splitedDate[2],
+                month: splitedDate[1],
+                day: splitedDate[0]
+            },
+            dueTime: {
+                hours: 0,
+                minutes: 0
+            }
+        });
+    }
+
+    if (dueTime && dueTime !== '-' && dueDate) {
+        const splitedTime = dueTime.split(':', 2);
+        Object.assign(taskProps, {
+            dueTime: {
+                hours: Number.parseInt(splitedTime[0]) - 3,
+                minutes: splitedTime[1]
+            }
+        });
+    }
+
+    if (maxPoints) {
+        let points = Number.parseInt(maxPoints);
+
+        if (points > 0) {
+            Object.assign(taskProps, { maxPoints });
+        }
+    }
+
+    return taskProps;
 }
 
 function getInlineKeyboardWithURI(text: string, uri: string): Markup.Markup<InlineKeyboardMarkup> {

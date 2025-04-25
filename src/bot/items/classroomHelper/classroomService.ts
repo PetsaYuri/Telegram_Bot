@@ -5,6 +5,7 @@ import { ICourseInfo } from "./types/CustomCourseInfo";
 import { MaterialTypes } from "./enums/MaterialTypes";
 import { classroom_v1 } from "@googleapis/classroom";
 import { decryptUserData } from "../../../api/services/userService";
+import { ITask } from "./types/ITask";
 
 export const classroomService = {
 
@@ -97,44 +98,15 @@ export const classroomService = {
         return (await classroom.courses.get({ id: courseId.toString() })).data.ownerId as string;
     },
 
-    createTask: async (chatId: number | undefined, courseName: string, taskProps: {
-        title: string,
-        description?: string,
-        dueDate?: classroom_v1.Schema$Date,
-        dueTime?: classroom_v1.Schema$TimeOfDay,
-        maxPoints?: number
-    }): Promise<string> => {
+    getTask: async (chatId: number | undefined, courseId: string, taskId: string): Promise<classroom_v1.Schema$CourseWork> => {
+        return getCourseWorkById(chatId, courseId, taskId)
+    },
 
+    createTask: async (chatId: number | undefined, courseName: string, taskProps: ITask): Promise<string> => {
         const classroom = await getClassroom(chatId);
         const course = await getCourseByName(chatId, courseName);
 
-        if (!course) {
-            throw new Error("We couldn't find the course by provided name. Please, make sure the course name is correct.");
-        }
-
-        const requestBody = {
-            title: taskProps.title,
-            state: "PUBLISHED",
-            maxPoints: 100,
-            workType: 'ASSIGNMENT',
-        }
-
-        if (taskProps.dueDate) {
-            Object.assign(requestBody, { dueDate: taskProps.dueDate });
-        }
-
-        if (taskProps.dueTime) {
-            Object.assign(requestBody, { dueTime: taskProps.dueTime });
-        }
-
-        if (taskProps.description) {
-            Object.assign(requestBody, { description: taskProps.description });
-        }
-
-        if (taskProps.maxPoints && taskProps.maxPoints > 0) {
-            Object.assign(requestBody, { maxPoints: taskProps.maxPoints });
-        }
-
+        const requestBody = generateReqBodyForTask(taskProps, 'create');
         const createdTask = await classroom.courses.courseWork.create({
             courseId: course.id as string,
             requestBody
@@ -143,54 +115,32 @@ export const classroomService = {
         return createdTask.data.alternateLink as string;
     },
 
-    editMaterial: async (chatId: number | undefined, courseId: string, materialId: string): Promise<string> => {
+    editTask: async (chatId: number | undefined, courseId: string, taskId: string, taskProps: ITask): Promise<string> => {
         const classroom = await getClassroom(chatId);
-        const message = 'successfully edit';
-        const materialType = await getMaterialType(chatId, courseId, materialId);
-        switch (materialType) {
-            case MaterialTypes.COURSE_WORK:
-                //  const courseWork = (await classroom.courses.courseWork.list()).data.courseWork?.pop();
-                //  courseWork?.title = 'new title';
-                await classroom.courses.courseWork.patch({
-                    courseId,
-                    id: materialId,
-                    requestBody: {
-                        title: 'new'
-                    }
-                })
+        const course = await getCourseById(chatId, courseId);
 
-                return message;
+        const requestBody = generateReqBodyForTask(taskProps, 'update');
+        const updateMask = getUpdateMask(requestBody);
 
-            case MaterialTypes.COURSE_WORK_MATERIAL:
-                classroom.courses.courseWorkMaterials.delete({
-                    courseId,
-                    id: materialId
-                })
-
-                return message;
-
-            case MaterialTypes.ANNOUNCEMENT:
-                classroom.courses.announcements.delete({
-                    courseId,
-                    id: materialId
-                })
-
-                return message;
-
-            default:
-                throw new Error(`Cannot delete material with id: '${materialId}'`)
-        }
+        const updatedTask = await classroom.courses.courseWork.patch({
+            courseId: course.id as string,
+            id: taskId,
+            requestBody,
+            updateMask
+        });
+        return updatedTask.data.alternateLink as string;
     },
 
-    deleteMaterial: async (chatId: number | undefined, courseId: string, materialId: string): Promise<string> => {
+    deleteTask: async (chatId: number | undefined, courseId: string, taskId: string): Promise<string> => {
         const classroom = await getClassroom(chatId);
         const message = 'successfully deleted';
-        const materialType = await getMaterialType(chatId, courseId, materialId);
+        const materialType = await getMaterialType(chatId, courseId, taskId);
+
         switch (materialType) {
             case MaterialTypes.COURSE_WORK:
                 await classroom.courses.courseWork.delete({
                     courseId,
-                    id: materialId
+                    id: taskId
                 })
 
                 return message;
@@ -198,7 +148,7 @@ export const classroomService = {
             case MaterialTypes.COURSE_WORK_MATERIAL:
                 classroom.courses.courseWorkMaterials.delete({
                     courseId,
-                    id: materialId
+                    id: taskId
                 })
 
                 return message;
@@ -206,13 +156,13 @@ export const classroomService = {
             case MaterialTypes.ANNOUNCEMENT:
                 classroom.courses.announcements.delete({
                     courseId,
-                    id: materialId
+                    id: taskId
                 })
 
                 return message;
 
             default:
-                throw new Error(`Cannot delete material with id: '${materialId}'`)
+                throw new Error(`Cannot delete task with id: '${taskId}'`)
         }
     },
 
@@ -288,8 +238,64 @@ async function getCourseWorkById(chatId: number | undefined, courseId: string, c
     })).data;
 }
 
-async function getCourseByName(chatId: number | undefined, courseName: string): Promise<classroom_v1.Schema$Course | undefined> {
+async function getCourseByName(chatId: number | undefined, courseName: string): Promise<classroom_v1.Schema$Course> {
     const classroom = await getClassroom(chatId);
     const courses = (await classroom.courses.list()).data.courses;
-    return courses?.find(course => course.name === courseName);
+    const course = courses?.find(course => course.name === courseName);
+
+    if (!course) {
+        if (!course) {
+            throw new Error(`We couldn't find the course by the provided name. 
+                Please, make sure the '${courseName}' course exists.`);
+        }
+    }
+    return course;
+}
+
+function generateReqBodyForTask(taskProps: ITask, type: 'create' | 'update') {
+    let requestBody = { title: taskProps.title };
+
+    switch (type) {
+        case 'create':
+            Object.assign(requestBody, {
+                state: "PUBLISHED",
+                maxPoints: 100,
+                workType: 'ASSIGNMENT',
+            })
+            break;
+
+        case 'update':
+            requestBody = {
+                title: taskProps.title
+            }
+            break;
+    }
+
+    if (taskProps.dueDate) {
+        Object.assign(requestBody, { dueDate: taskProps.dueDate });
+    }
+
+    if (taskProps.dueTime) {
+        Object.assign(requestBody, { dueTime: taskProps.dueTime });
+    }
+
+    if (taskProps.description) {
+        Object.assign(requestBody, { description: taskProps.description });
+    }
+
+    if (taskProps.maxPoints && taskProps.maxPoints > 0) {
+        Object.assign(requestBody, { maxPoints: taskProps.maxPoints });
+    }
+
+    return requestBody;
+}
+
+function getUpdateMask(requestBody: object): string {
+    const names = Object.getOwnPropertyNames(requestBody);
+    let updateMask = '';
+
+    for (let name of names) {
+        updateMask += name + ',';
+    }
+    return updateMask.substring(0, updateMask.length - 1);
 }
