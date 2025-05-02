@@ -170,10 +170,6 @@ export const classroomService = {
         return (await getCourseById(chatId, courseId)).name;
     },
 
-    getCourseWorkTitleById: async (chatId: number, courseId: string, courseWorkId: string): Promise<string | null | undefined> => {
-        return (await getCourseWorkById(chatId, courseId, courseWorkId)).title;
-    },
-
     getCourseIdByName: async (chatId: number | undefined, courseName: string): Promise<string | null | undefined> => {
         return (await getCourseByName(chatId, courseName))?.id;
     }

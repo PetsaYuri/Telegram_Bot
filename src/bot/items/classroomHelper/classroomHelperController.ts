@@ -60,7 +60,7 @@ export const classroomHelperController = async (ctx: any) => {
 
             const editMaterialMatch = callbackData.match('^edit materialId=(\\d{12}), courseId=(\\d{12})$');
             const deleteMaterialMatch = callbackData.match('^delete materialId=(\\d{12}), courseId=(\\d{12})$');
-            const setNotificationMatch = callbackData.match('^notif mat=(\\d{12}) course=(\\d{12}) date=(\\d{2}):(\\d{2}):(\\d{4})T(?:(\\d{2}):(\\d{2}))?$');
+            const setNotificationMatch = callbackData.match('^set notification material=(\\d{12}) course=(\\d{12})$');
 
             if (editMaterialMatch) {
                 await processingEditMaterialMessage(ctx, editMaterialMatch);
@@ -164,18 +164,11 @@ async function processingDeleteMaterialMessage(ctx: any, match: RegExpMatchArray
 }
 
 async function processingSetNotificationMessage(ctx: any, match: RegExpMatchArray) {
-    const chatId = ctx.chat?.id as number;
     await ctx.answerCbQuery();
-
     const materialId = match[1];
     const courseId = match[2];
-    const day = Number.parseInt(match[3]);
-    const month = Number.parseInt(match[4]);
-    const hour = match[6];
-    const minute = match[7];
 
-    const res = await classroomHelperService.setNotification(chatId, materialId, courseId, day, month, hour, minute);
-    await ctx.reply(res.text);
+    await classroomHelperService.setNotification(ctx, materialId, courseId);
 }
 
 async function processingCreateTaskMessage(ctx: any, match: RegExpMatchArray) {

@@ -19,17 +19,24 @@ export const passTestWizardScene = new Scenes.WizardScene<ISceneContext>('PASS_T
         return ctx.wizard.next();
     },
 
-    async (ctx) => {
+    async (ctx: any) => {
         const state = getState(ctx);
-        state.index = 0;
-        state.answers = new Map<string, string>();
         const numberOfQuest = Number.parseInt(ctx.text as string);
+
+        if (Number.isNaN(numberOfQuest)) {
+            await ctx.reply('Error: you must enter a number, please try again');
+            ctx.wizard.back();
+            return ctx.wizard.steps[ctx.wizard.cursor](ctx);
+        }
 
         const chatId = ctx.chat?.id;
         const testId = state.testId;
 
+        state.index = 0;
+        state.answers = new Map<string, string>();
         state.questions = await getQuestionToPass(chatId, testId, numberOfQuest);
         state.testType = (await getTest(testId, chatId)).type;
+
         await sendQuestion(ctx);
         return ctx.wizard.next();
     },

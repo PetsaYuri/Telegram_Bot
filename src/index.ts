@@ -14,6 +14,7 @@ import { createTestWizardScene } from './bot/items/testing/scenes/createTestScen
 import { passTestWizardScene } from './bot/items/testing/scenes/passTestScene';
 import { ISceneContext } from './bot/types/ISceneContext';
 import { editTaskWizardScene } from './bot/items/classroomHelper/scenes/editTaskScene';
+import { createNotifScene } from './bot/items/classroomHelper/scenes/createNotifScene';
 
 dotenv.config();
 mongoose.connect(ENV.MONGODB_URI);
@@ -27,7 +28,8 @@ const stage = new Scenes.Stage<ISceneContext>([
     createTaskWizardScene,
     editTaskWizardScene,
     createTestWizardScene,
-    passTestWizardScene
+    passTestWizardScene,
+    createNotifScene
 ]);
 
 bot.use(session());

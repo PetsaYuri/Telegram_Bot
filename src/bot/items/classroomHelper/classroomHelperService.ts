@@ -6,7 +6,6 @@ import User from "../../../api/models/users";
 import Course, { ICourse } from "../../../api/models/courses";
 import { ENV } from "../../../config/zod/env";
 import { classroom_v1 } from "@googleapis/classroom";
-import cron from 'node-cron';
 import { bot } from "../../..";
 import { CourseActions } from "./enums/CourseActions";
 import { ICourseInfo } from "./types/CustomCourseInfo";
@@ -14,6 +13,8 @@ import { IMaterial } from "./types/CustomMaterial";
 import { ICreateTaskSession } from "./types/sessions/ICreateTaskSession";
 import { IEditTaskSession } from "./types/sessions/IEditTaskSession";
 import { ITask } from "./types/ITask";
+import { ICreateNotifSession } from "./types/sessions/ICreateNotifSession";
+import { isPastDateAndTime } from "./scenes/createTaskScene";
 
 export const classroomHelperService = {
 
@@ -171,13 +172,29 @@ export const classroomHelperService = {
         return ({ text: message, keyboard: Markup.keyboard([]) });
     },
 
-    setNotification: async (chatId: number, courseWorkId: string, courseId: string, day: number, month: number, hour?: string, minute?: string): Promise<IBotResponse> => {
-        const courseName = await classroomService.getCourseNameById(chatId, '758358245506');
-        const courseWorkTitle = await classroomService.getCourseWorkTitleById(chatId, courseId, courseWorkId);
-        const message = `Notification: only one hour to go before due date for the '${courseWorkTitle}' work (the '${courseName}' course)`;
+    setNotification: async (ctx: any, courseWorkId: string, courseId: string) => {
+        const chatId = ctx.chat?.id as number;
+        const courseName = await classroomService.getCourseNameById(chatId, courseId); //'758358245506'
+        const courseWork = await classroomService.getTask(chatId, courseId, courseWorkId);
 
-        setScheduler(chatId, message, day, month, hour, minute);
-        return ({ text: `Notification for '${courseWorkTitle}' work set successfully`, keyboard: Markup.keyboard([]) })
+        const month = (courseWork.dueDate?.month)?.toString().padStart(2, '0');
+        const day = (courseWork.dueDate?.day)?.toString().padStart(2, '0');
+        const differenceTime = new Date(`${courseWork.dueDate?.year}-${month}-${day}T` +
+            `${courseWork.dueTime?.hours ?? '00'}:${courseWork.dueTime?.minutes ?? '00'}:${courseWork.dueTime?.seconds ?? '00'}`).getTime() - new Date().getTime();
+        let time = 0;
+
+        getNotificationTimeFromUser(ctx, differenceTime).then(async res => {
+            time = res.state.time as number;
+            const message = `Notification: only ${convertMsToDateStr(time)} left before the due date of the '${courseWork.title} '` +
+                `assignment (the '${courseName}' course)`;
+
+            setInterval(() => {
+                bot.telegram.sendMessage(chatId, message);
+            }, differenceTime - time - 60000)
+
+            await ctx.reply(`Notification for the '${courseWork.title}' assignment has been successfully set up and ` +
+                `will work after: ${convertMsToDateStr(differenceTime - time)}`);
+        })
     },
 }
 
@@ -187,13 +204,17 @@ function collectMaterialsInResponse(materials: Array<IMaterial>): IBotResponse[]
         let keyboard = getInlineKeyboardWithURI('Open in browser', material.link);
 
         if (material.dueDate) {
-            text += '\n due date: ' + getFormattedDate(material.dueDate);
+            const formattedDate = getFormattedDate(material.dueDate)!;
+            const formattedTime = getFormattedTime(material.dueTime)!;
+            text += '\n due date: ' + formattedDate;
 
             if (material.dueTime) {
-                text += ' | ' + getFormattedTime(material.dueTime);
+                text += ' | ' + formattedTime;
             }
 
-            keyboard = addDueDateBtnInKeyboard(keyboard, material.id, material.courseId, material.dueDate, material.dueTime);
+            if (material.dueDate && !isPastDateAndTime(formattedDate, formattedTime)) {
+                keyboard = addDueDateBtnInKeyboard(keyboard, material.id, material.courseId);
+            }
         }
 
         return ({
@@ -218,15 +239,11 @@ export function getInlineKeyboardWithAuthorisation(chatId: number): Markup.Marku
     ]);
 }
 
-function addDueDateBtnInKeyboard(keyboard: Markup.Markup<InlineKeyboardMarkup>, taskId: string, courseId: string, dueDate: classroom_v1.Schema$Date, dueTime?: classroom_v1.Schema$TimeOfDay): Markup.Markup<InlineKeyboardMarkup> {
+function addDueDateBtnInKeyboard(keyboard: Markup.Markup<InlineKeyboardMarkup>, taskId: string, courseId: string): Markup.Markup<InlineKeyboardMarkup> {
     let buttons = keyboard.reply_markup.inline_keyboard;
-    let callbackText = `notif mat=${taskId} course=${courseId} date=${getFormattedDate(dueDate)}`;
-    if (dueTime) {
-        dueTime.hours = (dueTime.hours as number) - 1
-        callbackText += `T${getFormattedTime(dueTime)}`;
-    }
+    let callbackText = `set notification material=${taskId} course=${courseId}`;
 
-    buttons.push([Markup.button.callback('Set due date notification (1 hour before)', callbackText)])
+    buttons.push([Markup.button.callback('Set notification', callbackText)])
     return Markup.inlineKeyboard(buttons);
 }
 
@@ -235,8 +252,9 @@ export function getFormattedDate(dueDate?: classroom_v1.Schema$Date): string | u
         return '';
     }
 
+    const day = dueDate.day;
     const month = dueDate.month;
-    return dueDate.day + ':' + (month && month < 10 ? '0' + month : month) + ':' + dueDate.year
+    return (day && day < 10 ? '0' + day : day) + '.' + (month && month < 10 ? '0' + month : month) + '.' + dueDate.year;
 }
 
 export function getFormattedTime(dueTime?: classroom_v1.Schema$TimeOfDay): string | undefined {
@@ -267,11 +285,41 @@ export function getFormattedTime(dueTime?: classroom_v1.Schema$TimeOfDay): strin
     return formatedTime;
 }
 
-function setScheduler(chatId: number, message: string, day: number, month: number, hour?: string, minute?: string): void {
-    const scheduler = cron.schedule(`${minute} ${hour} ${day} ${month} *`, () => {
-        bot.telegram.sendMessage(chatId, message);
-        scheduler.stop();
-    });
+export function convertMsToDateStr(ms: number): string {
+    let dateStr = '';
+    const days = Math.floor(ms / (1000 * 60 * 60 * 24));
+    if (days) {
+        dateStr += `${days} days `;
+    }
+
+    const hours = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    if (hours) {
+        dateStr += `${hours} hours `;
+    }
+
+    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+    if (minutes) {
+        dateStr += `${minutes} minutes `;
+    }
+
+    return dateStr.trimEnd();
+}
+
+function getNotificationTimeFromUser(ctx: any, differenceTime: number): Promise<ICreateNotifSession> {
+    if (!differenceTime) {
+        throw new Error('You cannot set a notification to task that is overdue')
+    }
+
+    return new Promise((resolve) => {
+        ctx.scene.enter('CREATE_NOTIF', { differenceTime });
+
+        const checkState = setInterval(() => {
+            if (!ctx.wizard?.cursor) {
+                clearInterval(checkState);
+                resolve(ctx.session.__scenes);
+            }
+        }, 500)
+    })
 }
 
 function getReplyKeyboardButton(text: string): Markup.Markup<ReplyKeyboardMarkup> {
