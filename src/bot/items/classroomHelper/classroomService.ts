@@ -6,15 +6,20 @@ import { MaterialTypes } from "./enums/MaterialTypes";
 import { classroom_v1 } from "@googleapis/classroom";
 import { decryptUserData } from "../../../api/services/userService";
 import { ITask } from "./types/ITask";
+import { translationsHandler } from "../../../api/middleware/translationsHandler";
+import { translationKeys } from "../../types/translations/TranslationsKeys";
+import { format, getLang } from "../../botService";
+import { SceneSessionData } from "telegraf/typings/scenes";
 
 export const classroomService = {
 
-    getAllOwnCourses: async (chatId: number | undefined): Promise<ICourseInfo[]> => {
-        const classroom = await getClassroom(chatId);
+    getAllOwnCourses: async (chatId: number | undefined, scenes: SceneSessionData | undefined): Promise<ICourseInfo[]> => {
+        const classroom = await getClassroom(chatId, scenes);
         const courses = (await classroom.courses.list()).data.courses;
+        const lang = getLang(scenes);
 
         if (!courses) {
-            throw new Error("Can't retrieve courses from classroom");
+            throw new Error(translationsHandler(translationKeys.CLASSROOM_HELPER_CANT_RETRIEVE_COURSES_TEXT, lang));
         }
 
         const ownerId = (await classroom.userProfiles.get({ userId: 'me' })).data.id;
@@ -27,12 +32,13 @@ export const classroomService = {
             }) as ICourseInfo);
     },
 
-    getAllAvailableCourses: async (chatId: number | undefined): Promise<ICourseInfo[]> => {
-        const classroom = await getClassroom(chatId);
+    getAllAvailableCourses: async (chatId: number | undefined, scenes: SceneSessionData | undefined): Promise<ICourseInfo[]> => {
+        const classroom = await getClassroom(chatId, scenes);
         const courses = (await classroom.courses.list()).data.courses;
+        const lang = getLang(scenes);
 
         if (!courses) {
-            throw new Error("Can't retrieve courses from classroom");
+            throw new Error(translationsHandler(translationKeys.CLASSROOM_HELPER_CANT_RETRIEVE_COURSES_TEXT, lang));
         }
 
         const ownerId = (await classroom.userProfiles.get({ userId: 'me' })).data.id;
@@ -45,8 +51,8 @@ export const classroomService = {
             }) as ICourseInfo);
     },
 
-    getAllMaterials: async (chatId: number | undefined, courseId: string, lastTimeRetrieved?: Date): Promise<(IMaterial)[]> => {
-        const classroom = await getClassroom(chatId);
+    getAllMaterials: async (chatId: number | undefined, scenes: SceneSessionData | undefined, courseId: string, lastTimeRetrieved?: Date): Promise<(IMaterial)[]> => {
+        const classroom = await getClassroom(chatId, scenes);
 
         const courseWorks = (await classroom.courses.courseWork.list({ courseId: courseId.toString() })).data.courseWork;
         const announcements = (await classroom.courses.announcements.list({ courseId: courseId.toString() })).data.announcements;
@@ -88,23 +94,23 @@ export const classroomService = {
         return customMaterials;
     },
 
-    getOwnerIdFromUserProfile: async (chatId: number | undefined): Promise<string> => {
-        const classroom = await getClassroom(chatId);
+    getOwnerIdFromUserProfile: async (chatId: number | undefined, scenes: SceneSessionData | undefined): Promise<string> => {
+        const classroom = await getClassroom(chatId, scenes);
         return (await classroom.userProfiles.get({ userId: 'me' })).data.id as string;
     },
 
-    getOwnerIdFromCourse: async (chatId: number | undefined, courseId: number): Promise<string> => {
-        const classroom = await getClassroom(chatId);
+    getOwnerIdFromCourse: async (chatId: number | undefined, scenes: SceneSessionData | undefined, courseId: number): Promise<string> => {
+        const classroom = await getClassroom(chatId, scenes);
         return (await classroom.courses.get({ id: courseId.toString() })).data.ownerId as string;
     },
 
-    getTask: async (chatId: number | undefined, courseId: string, taskId: string): Promise<classroom_v1.Schema$CourseWork> => {
-        return getCourseWorkById(chatId, courseId, taskId)
+    getTask: async (chatId: number | undefined, scenes: SceneSessionData | undefined, courseId: string, taskId: string): Promise<classroom_v1.Schema$CourseWork> => {
+        return getCourseWorkById(chatId, scenes, courseId, taskId)
     },
 
-    createTask: async (chatId: number | undefined, courseName: string, taskProps: ITask): Promise<string> => {
-        const classroom = await getClassroom(chatId);
-        const course = await getCourseByName(chatId, courseName);
+    createTask: async (chatId: number | undefined, scenes: SceneSessionData | undefined, courseName: string, taskProps: ITask): Promise<string> => {
+        const classroom = await getClassroom(chatId, scenes);
+        const course = await getCourseByName(chatId, scenes, courseName);
 
         const requestBody = generateReqBodyForTask(taskProps, 'create');
         const createdTask = await classroom.courses.courseWork.create({
@@ -115,9 +121,9 @@ export const classroomService = {
         return createdTask.data.alternateLink as string;
     },
 
-    editTask: async (chatId: number | undefined, courseId: string, taskId: string, taskProps: ITask): Promise<string> => {
-        const classroom = await getClassroom(chatId);
-        const course = await getCourseById(chatId, courseId);
+    editTask: async (chatId: number | undefined, scenes: SceneSessionData | undefined, courseId: string, taskId: string, taskProps: ITask): Promise<string> => {
+        const classroom = await getClassroom(chatId, scenes);
+        const course = await getCourseById(chatId, scenes, courseId);
 
         const requestBody = generateReqBodyForTask(taskProps, 'update');
         const updateMask = getUpdateMask(requestBody);
@@ -131,10 +137,12 @@ export const classroomService = {
         return updatedTask.data.alternateLink as string;
     },
 
-    deleteTask: async (chatId: number | undefined, courseId: string, taskId: string): Promise<string> => {
-        const classroom = await getClassroom(chatId);
-        const message = 'successfully deleted';
-        const materialType = await getMaterialType(chatId, courseId, taskId);
+    deleteTask: async (chatId: number | undefined, scenes: SceneSessionData | undefined, courseId: string, taskId: string): Promise<string> => {
+        const classroom = await getClassroom(chatId, scenes);
+        const lang = getLang(scenes);
+
+        const message = translationsHandler(translationKeys.CLASSROOM_HELPER_SUCCESS_DELETED_TEXT, lang);
+        const materialType = await getMaterialType(chatId, scenes, courseId, taskId);
 
         switch (materialType) {
             case MaterialTypes.COURSE_WORK:
@@ -162,24 +170,25 @@ export const classroomService = {
                 return message;
 
             default:
-                throw new Error(`Cannot delete task with id: '${taskId}'`)
+                throw new Error(format(translationsHandler(translationKeys.CLASSROOM_HELPER_CANNOT_DELETE_TASK_TEXT, lang), taskId));
         }
     },
 
-    getCourseNameById: async (chatId: number | undefined, courseId: string): Promise<string | null | undefined> => {
-        return (await getCourseById(chatId, courseId)).name;
+    getCourseNameById: async (chatId: number | undefined, scenes: SceneSessionData | undefined, courseId: string): Promise<string | null | undefined> => {
+        return (await getCourseById(chatId, scenes, courseId)).name;
     },
 
-    getCourseIdByName: async (chatId: number | undefined, courseName: string): Promise<string | null | undefined> => {
-        return (await getCourseByName(chatId, courseName))?.id;
+    getCourseIdByName: async (chatId: number | undefined, scenes: SceneSessionData | undefined, courseName: string): Promise<string | null | undefined> => {
+        return (await getCourseByName(chatId, scenes, courseName))?.id;
     }
 }
 
-async function getClassroom(chatId: number | undefined): Promise<classroom_v1.Classroom> {
+async function getClassroom(chatId: number | undefined, scenes: SceneSessionData | undefined): Promise<classroom_v1.Classroom> {
     const user = await User.findOne({ chatId });
+    const lang = getLang(scenes);
 
     if (!user) {
-        throw new Error(`The user with chatId '${chatId}' isn't authorised`);
+        throw new Error(translationsHandler(translationKeys.CLASSROOM_HELPER_UNAUTHORISED_USER_TEXT, lang));
     }
 
     const decryptedToken = decryptUserData(user.refreshToken);
@@ -187,9 +196,10 @@ async function getClassroom(chatId: number | undefined): Promise<classroom_v1.Cl
     return new classroom_v1.Classroom({ auth: OAUTH2_CLIENT });
 }
 
-async function getMaterialType(chatId: number | undefined, courseId: string, materialId: string): Promise<MaterialTypes> {
-    const classroom = await getClassroom(chatId);
+async function getMaterialType(chatId: number | undefined, scenes: SceneSessionData | undefined, courseId: string, materialId: string): Promise<MaterialTypes> {
+    const classroom = await getClassroom(chatId, scenes);
     const courseWorks = (await classroom.courses.courseWork.list({ courseId })).data.courseWork;
+    const lang = getLang(scenes);
 
     const isCourseWork = courseWorks?.filter(course => {
         return course.id === materialId
@@ -217,16 +227,17 @@ async function getMaterialType(chatId: number | undefined, courseId: string, mat
         return MaterialTypes.ANNOUNCEMENT;
     }
 
-    throw new Error('Cannot define the type of material')
+    throw new Error(translationsHandler(translationKeys.CLASSROOM_HELPER_CANNOT_DEFINE_TYPE_TEXT, lang))
 }
 
-async function getCourseById(chatId: number | undefined, courseId: string): Promise<classroom_v1.Schema$Course> {
-    const classroom = await getClassroom(chatId);
+async function getCourseById(chatId: number | undefined, scenes: SceneSessionData | undefined, courseId: string): Promise<classroom_v1.Schema$Course> {
+    const classroom = await getClassroom(chatId, scenes);
     return (await classroom.courses.get({ id: courseId })).data;
 }
 
-async function getCourseWorkById(chatId: number | undefined, courseId: string, courseWorkId: string): Promise<classroom_v1.Schema$CourseWork> {
-    const classroom = await getClassroom(chatId);
+async function getCourseWorkById(chatId: number | undefined, scenes: SceneSessionData | undefined, courseId: string,
+    courseWorkId: string): Promise<classroom_v1.Schema$CourseWork> {
+    const classroom = await getClassroom(chatId, scenes);
 
     return (await classroom.courses.courseWork.get({
         id: courseWorkId,
@@ -234,15 +245,16 @@ async function getCourseWorkById(chatId: number | undefined, courseId: string, c
     })).data;
 }
 
-async function getCourseByName(chatId: number | undefined, courseName: string): Promise<classroom_v1.Schema$Course> {
-    const classroom = await getClassroom(chatId);
+async function getCourseByName(chatId: number | undefined, scenes: SceneSessionData | undefined, courseName: string): Promise<classroom_v1.Schema$Course> {
+    const classroom = await getClassroom(chatId, scenes);
+    const lang = getLang(scenes);
+
     const courses = (await classroom.courses.list()).data.courses;
     const course = courses?.find(course => course.name === courseName);
 
     if (!course) {
         if (!course) {
-            throw new Error(`We couldn't find the course by the provided name. 
-                Please, make sure the '${courseName}' course exists.`);
+            throw new Error(format(translationsHandler(translationKeys.CLASSROOM_HELPER_COULDNT_FIND_COURSE_TEXT, lang), courseName));
         }
     }
     return course;

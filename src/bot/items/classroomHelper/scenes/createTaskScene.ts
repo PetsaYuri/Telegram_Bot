@@ -1,6 +1,10 @@
 import { Markup, Scenes } from "telegraf";
 import { ISceneContext } from "../../../types/ISceneContext";
 import { ModeTypes } from "../../../types/ModeTypes";
+import { translationsHandler } from "../../../../api/middleware/translationsHandler";
+import { translationKeys } from "../../../types/translations/TranslationsKeys";
+import { SceneSessionData } from "telegraf/typings/scenes";
+import { format, getLang } from "../../../botService";
 
 export interface ICreateTaskState {
     title?: string,
@@ -10,13 +14,9 @@ export interface ICreateTaskState {
     dueTime?: string
 }
 
-const skipText = (prevValue?: string) => {
-    let text = "enter the '-' symbol to skip";
-    if (!prevValue) {
-        return text;
-    }
-
-    return text + ` and keep the previous value: '${prevValue.toString()}'`;
+const skipText = (scenes: SceneSessionData | undefined) => {
+    const lang = getLang(scenes);
+    return translationsHandler(translationKeys.SCENES_ENTER_TO_SKIP_TEXT, lang);
 }
 
 const skipKeyboard = Markup.keyboard([
@@ -27,32 +27,39 @@ const skipKeyboard = Markup.keyboard([
 
 export const createTaskWizardScene = new Scenes.WizardScene<ISceneContext>('CREATE_TASK',
     async (ctx) => {
-        const question = 'Enter a title:';
+
+        const lang = getLang(ctx.session.__scenes);
+        const question = translationsHandler(translationKeys.SCENES_ENTER_TITLE_TEXT, lang);
+
         await ctx.reply(question);
         return ctx.wizard.next();
     },
 
     async (ctx: any) => {
+        const lang = getLang(ctx.session.__scenes);
         const state = getState(ctx);
         const title = state.title ? state.title : ctx.text as string;
 
         if (title.length < 1 || title.length > 3000) {
-            await ctx.reply('Error: the title must be between 1 and 3000 characters, please try again');
+            await ctx.reply(translationsHandler(translationKeys.SCENES_TITLE_MUST_BE_BETWEEN_TEXT, lang));
             ctx.wizard.back();
             return ctx.wizard.steps[ctx.wizard.cursor](ctx);
         }
 
         state.title = title;
-        await ctx.reply('Enter a description (optional)', skipKeyboard);
+        await ctx.reply(translationsHandler(translationKeys.SCENES_ENTER_DESC_TEXT, lang), skipKeyboard);
         return ctx.wizard.next();
     },
 
     async (ctx: any) => {
+        const lang = getLang(ctx.session.__scenes);
         const state = getState(ctx);
         const description = state.description ? state.description : ctx.text as string;
 
         if (description.length > 30000) {
-            await ctx.reply(`Error: the description must be greater than 30000 or not present (${skipText()}), please try again`);
+            await ctx.reply(format(
+                translationsHandler(translationKeys.SCENES_DESC_MUST_BE_GREATER_TEXT, lang), skipText(ctx.session.__scenes)));
+
             ctx.wizard.back();
             return ctx.wizard.steps[ctx.wizard.cursor](ctx);
         }
@@ -67,29 +74,31 @@ export const createTaskWizardScene = new Scenes.WizardScene<ISceneContext>('CREA
             .resize()
             .oneTime()
 
-        await ctx.reply(`Enter a maximum score (enter '0' if you want to leave the task ungraded).`, keyboard);
+        await ctx.reply(translationsHandler(translationKeys.SCENES_ENTER_MAX_SCORE_TEXT, lang), keyboard);
         return ctx.wizard.next();
     },
 
     async (ctx: any) => {
+        const lang = getLang(ctx.session.__scenes);
         const state = getState(ctx);
         const maxPoints = state.maxPoints ? state.maxPoints : Number.parseInt(ctx.text as string);
 
         if (Number.isNaN(maxPoints) || maxPoints > Number.MAX_SAFE_INTEGER || maxPoints < 0) {
-            await ctx.reply(`Error: the maximum score must be greater than or equal to 0 ` +
-                `(in which case the assignment will not be graded), please try again`);
+            await ctx.reply(translationsHandler(translationKeys.SCENES_MAX_SCORE_MUST_BE_GREATER_TEXT, lang));
 
             ctx.wizard.back();
             return ctx.wizard.steps[ctx.wizard.cursor](ctx);
         }
 
         state.maxPoints = maxPoints;
-        const keyboard = Markup.keyboard(getButtonsForSelectDate())
-        await ctx.reply("Enter a due date (enter '-' if don't need to). Format: dd.mm.yyyy", keyboard);
+        const keyboard = Markup.keyboard(getButtonsForSelectDate());
+
+        await ctx.reply(translationsHandler(translationKeys.SCENES_ENTER_DUE_DATE_TEXT, lang), keyboard);
         return ctx.wizard.next();
     },
 
     async (ctx: any) => {
+        const lang = getLang(ctx.session.__scenes);
         const state = getState(ctx);
         const dueDate = state.dueDate ? state.dueDate : ctx.text as string;
 
@@ -98,12 +107,12 @@ export const createTaskWizardScene = new Scenes.WizardScene<ISceneContext>('CREA
             return;
 
         } else if (!dueDate.match(/^(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.\d{4}$/)) {
-            await ctx.reply(`Error: the entered date doesn't match the required format, please try again`);
+            await ctx.reply(translationsHandler(translationKeys.SCENES_DATE_INCORRECT_FORMAT_TEXT, lang));
             ctx.wizard.back();
             return ctx.wizard.steps[ctx.wizard.cursor](ctx);
 
         } else if (isPastDate(dueDate)) {
-            await ctx.reply(`Error: the entered date cannot be in the past, please try again`);
+            await ctx.reply(translationsHandler(translationKeys.SCENES_DATE_CANNOT_BE_IN_PAST_TEXT, lang));
             ctx.wizard.back();
             return ctx.wizard.steps[ctx.wizard.cursor](ctx);
         }
@@ -118,11 +127,12 @@ export const createTaskWizardScene = new Scenes.WizardScene<ISceneContext>('CREA
             .resize()
             .oneTime();
 
-        await ctx.reply("Enter a due time (enter '-' if don't need to). Format: hh:mm", keyboard);
+        await ctx.reply(translationsHandler(translationKeys.SCENES_ENTER_DUE_TIME_TEXT, lang), keyboard);
         return ctx.wizard.next();
     },
 
     async (ctx: any) => {
+        const lang = getLang(ctx.session.__scenes);
         const state = getState(ctx);
         const dueTime = state.dueTime ? state.dueTime : ctx.text as string;
 
@@ -131,12 +141,16 @@ export const createTaskWizardScene = new Scenes.WizardScene<ISceneContext>('CREA
             return;
 
         } else if (!dueTime.match(/^(?:[01]\d|2[0-3]):[0-5]\d$/)) {
-            await ctx.reply(`Error: the entered time doesn't match the required format, please try again (or ${skipText()})`, { reply_markup: skipKeyboard });
+
+            await ctx.reply(format(translationsHandler(translationKeys.SCENES_TIME_INCORRECT_FORMAT_TEXT, lang), skipText(ctx.session.__scenes)), {
+                reply_markup: skipKeyboard
+            });
+
             ctx.wizard.back();
             return ctx.wizard.steps[ctx.wizard.cursor](ctx);
 
         } else if (isPastDateAndTime(state.dueDate as string, dueTime)) {
-            await ctx.reply(`Error: the entered time cannot be in the past, please try again`);
+            await ctx.reply(translationsHandler(translationKeys.SCENES_TIME_CANNOT_BE_IN_PAST_TEXT, lang));
             ctx.wizard.back();
             return ctx.wizard.steps[ctx.wizard.cursor](ctx);
         }
@@ -149,13 +163,17 @@ export const createTaskWizardScene = new Scenes.WizardScene<ISceneContext>('CREA
 async function leaveFromScene(ctx: any) {
     const state = getState(ctx);
     ctx.session.__scenes = {
+
         cursor: NaN, state: {
             title: state.title,
             description: state.description,
+
             dueDate: state.dueDate,
             dueTime: state.dueTime,
             maxPoints: state.maxPoints,
-            mode: ModeTypes.CLASSROOM_HELPER
+
+            mode: ModeTypes.CLASSROOM_HELPER,
+            lang: getLang(ctx.session.__scenes)
         }
     };
 

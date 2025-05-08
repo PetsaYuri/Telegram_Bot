@@ -80,7 +80,7 @@ async function isUserTokenValid(userId: string): Promise<boolean> {
         }
 
         if (user.isTokenValid) {
-            await classroomService.getAllAvailableCourses(user.chatId);
+            await classroomService.getAllAvailableCourses(user.chatId, undefined);
             return true;
         }
 

@@ -2,20 +2,30 @@ import { Markup, Scenes } from "telegraf";
 import { ISceneContext } from "../../../types/ISceneContext";
 import ms, { StringValue } from "ms";
 import { convertMsToDateStr } from "../classroomHelperService";
+import { translationsHandler } from "../../../../api/middleware/translationsHandler";
+import { translationKeys } from "../../../types/translations/TranslationsKeys";
+import { getLang } from "../../../botService";
 
 export const createNotifScene = new Scenes.WizardScene<ISceneContext>('CREATE_NOTIF',
     async (ctx: any) => {
+
+        const lang = getLang(ctx.session.__scenes);
         const keyboard = Markup.keyboard([
             ['1d', '1h', '1m'],
             ['1d 1h', '1d 1h 1m', '6d']
         ])
-        await ctx.reply('Enter a time (before which you want to receive the notification) in the next format: ' +
-            `1d/1h/1m (before left: ${convertMsToDateStr(ctx.scene.state.differenceTime)})`, keyboard);
+
+        await ctx.reply(translationsHandler(translationKeys.SCENES_ENTER_TIME_TEXT, lang) +
+            '1d/1h/1m (' + translationsHandler(translationKeys.SCENES_LEFT_TEXT, lang) +
+            ` ${convertMsToDateStr(ctx.session.__scenes, ctx.scene.state.differenceTime)})`, keyboard);
+
         return ctx.wizard.next();
     },
 
     async (ctx: any) => {
+        const lang = getLang(ctx.session.__scenes);
         const state = ctx.scene.state;
+
         const timeStr = ctx.text as StringValue
         let time = 0;
 
@@ -30,17 +40,17 @@ export const createNotifScene = new Scenes.WizardScene<ISceneContext>('CREATE_NO
         }
 
         if (!time) {
-            await ctx.reply('Error: the time cannot be empty, please try again');
+            await ctx.reply(translationsHandler(translationKeys.SCENES_TIME_CANNOT_BE_EMPTY_TEXT, lang));
             ctx.wizard.back();
             return ctx.wizard.steps[ctx.wizard.cursor](ctx);
 
         } else if (time <= 60000) {
-            await ctx.reply('Error: the time cannot be less than one second, please try again');
+            await ctx.reply(translationsHandler(translationKeys.SCENES_TIME_CANNOT_BE_LESS_TEXT, lang));
             ctx.wizard.back();
             return ctx.wizard.steps[ctx.wizard.cursor](ctx);
 
         } else if (time >= ctx.scene.state.differenceTime) {
-            await ctx.reply('Error: the time cannot be more than the actual left, please try again');
+            await ctx.reply(translationsHandler(translationKeys.SCENES_TIME_CANNOT_BE_MORE_TEXT, lang));
             ctx.wizard.back();
             return ctx.wizard.steps[ctx.wizard.cursor](ctx);
         }
@@ -49,6 +59,7 @@ export const createNotifScene = new Scenes.WizardScene<ISceneContext>('CREATE_NO
         ctx.session.__scenes = {
             cursor: NaN, state: {
                 time: state.time,
+                lang
             }
         };
 

@@ -2,8 +2,12 @@ import { Markup, Scenes } from "telegraf";
 import { TestTypes } from "../enums/testTypes";
 import { ISceneContext } from "../../../types/ISceneContext";
 import { ModeTypes } from "../../../types/ModeTypes";
+import { translationsHandler } from "../../../../api/middleware/translationsHandler";
+import { translationKeys } from "../../../types/translations/TranslationsKeys";
+import { getLang } from "../../../botService";
 
 interface ICreateTestState {
+    lang: string,
     title: string,
     typeOfTest: string,
     documentId: string
@@ -11,17 +15,21 @@ interface ICreateTestState {
 
 export const createTestWizardScene = new Scenes.WizardScene<ISceneContext>('CREATE_TEST',
     async (ctx) => {
-        await ctx.reply('Enter a title:');
+        const lang = getLang(ctx.session.__scenes);
+        await ctx.reply(translationsHandler(translationKeys.SCENES_ENTER_TITLE_TEXT, lang));
         return ctx.wizard.next();
     },
 
     async (ctx: any) => {
+        const lang = getLang(ctx.session.__scenes);
         const state = getState(ctx);
         const title = ctx.text as string;
 
-        if (!title || title.length < 250) {
-            await ctx.reply('Error: title is required!');
+        if (!title || title.length > 250) {
+            await ctx.reply(translationsHandler(translationKeys.SCENES_ERROR_TEXT, lang) +
+                translationsHandler(translationKeys.TESTING_TITLE_REQUIRED_TEXT, lang));
             ctx.wizard.back();
+
             return ctx.wizard.steps[ctx.wizard.cursor](ctx);
         }
 
@@ -30,30 +38,35 @@ export const createTestWizardScene = new Scenes.WizardScene<ISceneContext>('CREA
             [Markup.button.text(type)]
         )
 
-        await ctx.reply('Select the type of test:', Markup.keyboard(keyboardButtons)
-            .resize()
-            .oneTime()
+        await ctx.reply(translationsHandler(translationKeys.SCENES_SELECT_TEST_TYPE_TEXT, lang),
+            Markup.keyboard(keyboardButtons)
+                .resize()
+                .oneTime()
         );
 
         return ctx.wizard.next();
     },
 
     async (ctx: any) => {
+        const lang = getLang(ctx.session.__scenes);
         const state = getState(ctx);
         const typeOfTest = ctx.text as string;
 
         if (!typeOfTest || !(Object.values(TestTypes) as string[]).includes(typeOfTest)) {
-            await ctx.reply('Error: incorrect test type');
+            await ctx.reply(translationsHandler(translationKeys.SCENES_ERROR_TEXT, lang) +
+                translationsHandler(translationKeys.TESTING_INCORRECT_TEST_TYPE_TEXT, lang));
+
             ctx.wizard.back();
             return ctx.wizard.steps[ctx.wizard.cursor](ctx);
         }
 
         state.typeOfTest = typeOfTest;
-        await ctx.reply('Attach document:');
+        await ctx.reply(translationsHandler(translationKeys.SCENES_ATTACH_DOC_TEXT, lang));
         return ctx.wizard.next();
     },
 
     async (ctx: any) => {
+        const lang = getLang(ctx.session.__scenes);
         const state = getState(ctx);
         let documentId;
 
@@ -62,7 +75,9 @@ export const createTestWizardScene = new Scenes.WizardScene<ISceneContext>('CREA
         }
 
         if (!documentId) {
-            await ctx.reply('Error: document is required!');
+            await ctx.reply(translationsHandler(translationKeys.SCENES_ERROR_TEXT, lang) +
+                translationsHandler(translationKeys.TESTING_DOCUMENT_REQUIRED_TEXT, lang));
+
             ctx.wizard.back();
             return ctx.wizard.steps[ctx.wizard.cursor](ctx);
         }
@@ -74,7 +89,8 @@ export const createTestWizardScene = new Scenes.WizardScene<ISceneContext>('CREA
                 title: state.title,
                 typeOfTest: state.typeOfTest,
                 documentId: state.documentId,
-                mode: ModeTypes.TESTING
+                mode: ModeTypes.TESTING,
+                lang
             }
         };
 

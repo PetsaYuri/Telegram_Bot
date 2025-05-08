@@ -1,20 +1,26 @@
 import { Scenes } from "telegraf";
 import { testingService } from "./testingService";
+import { translationsHandler } from "../../../api/middleware/translationsHandler";
+import { getLang } from "../../botService";
+import { translationKeys } from "../../types/translations/TranslationsKeys";
 
 export const testingController = async (ctx: any) => {
     const text = ctx.text;
+    const lang = getLang(ctx.session.__scenes);
 
     switch (text) {
 
-        case 'Testing':
         case '/testing':
-        case 'back to tests':
+        case translationsHandler(translationKeys.GENERAL_TESTING_TEXT, lang):
+        case translationsHandler(translationKeys.GENERAL_TESTING_COMMAND, lang):
+        case translationsHandler(translationKeys.TESTING_BACK_TO_TESTS_TEXT, lang):
+
             const chatId = ctx.chat?.id as number;
-            const res = await testingService.getMenuResponse(chatId);
+            const res = await testingService.getMenuResponse(chatId, ctx.session.__scenes);
             await ctx.reply(res.text, res.keyboard);
             break;
 
-        case 'Create a new test':
+        case translationsHandler(translationKeys.TESTING_CREATE_NEW_TEST_TEXT, lang):
             testingService.createTest(ctx);
             break;
 
@@ -22,7 +28,7 @@ export const testingController = async (ctx: any) => {
 
             const callbackData = ctx?.callbackQuery.data;
             if (!callbackData && !text) {
-                return await ctx.reply("Unknown command. Please try again.");
+                return await ctx.reply(translationsHandler(translationKeys.GENERAL_UNKNOWN_COMMAND_TEXT, lang));
             }
 
             const passTestMatch = callbackData.match('^pass test id=([a-f\\d]{24})$');
@@ -47,8 +53,8 @@ async function processingDeleteTestMessage(ctx: Scenes.SceneContext, match: RegE
     await ctx.answerCbQuery();
     const testId = match[1];
     const chatId = ctx.chat?.id as number;
-    await testingService.deleteTest(chatId, testId);
+    await testingService.deleteTest(chatId, ctx.session.__scenes, testId);
 
-    const res = await testingService.getMenuResponse(chatId);
+    const res = await testingService.getMenuResponse(chatId, ctx.session.__scenes);
     await ctx.reply(res.text, res.keyboard);
 }

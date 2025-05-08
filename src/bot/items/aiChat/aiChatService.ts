@@ -2,13 +2,16 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { ENV } from "../../../config/zod/env";
 import { marked } from "marked";
 import { aiChatModels } from "./enums/aiChatModels";
+import { translationsHandler } from "../../../api/middleware/translationsHandler";
+import { translationKeys } from "../../types/translations/TranslationsKeys";
+import { LangTypes } from "../../types/translations/LangTypes";
 
 const genAI = new GoogleGenerativeAI(ENV.GOOGLE_GEMINI_API_KEY);
 
 export const aiChatService = {
 
-    getMenuResponse: (): string => {
-        return "Welcome to AI Chat! How can I assist you today?";
+    getMenuResponse: (lang: LangTypes): string => {
+        return translationsHandler(translationKeys.AI_ASSISTANT_MENU_RESPONSE, lang);
     },
 
     getAnswerFromPrompt: async (prompt: string, fileLinks?: Array<URL>, modelType: aiChatModels = aiChatModels.GEMINI_1_5_FLASH): Promise<string> => {

@@ -1,5 +1,8 @@
 import { Scenes } from "telegraf";
 import { aiChatService, getFileLinksFromContext, markdownToHtml } from "./aiChatService";
+import { getLang } from "../../botService";
+import { translationsHandler } from "../../../api/middleware/translationsHandler";
+import { translationKeys } from "../../types/translations/TranslationsKeys";
 
 export const aiChatController = async (ctx: any) => {
     const messageType = getMessageType(ctx.message);
@@ -8,12 +11,14 @@ export const aiChatController = async (ctx: any) => {
     switch (messageType) {
         case 'text':
             const text = ctx.text;
+            const lang = getLang(ctx.session.__scenes);
 
             if (!text) {
-                return ctx.reply('You need to enter some text');
+                return ctx.reply(translationsHandler(translationKeys.AI_ASSISTANT_ENTER_SOME_TEXT, lang));
             }
 
-            else if (text === 'AI Assistant' || text === '/ai_assistant') {
+            else if (text === '/ai_assistant' || translationsHandler(translationKeys.GENERAL_AI_ASSISTANT_TEXT, lang)
+                || translationsHandler(translationKeys.GENERAL_AI_ASSISTANT_COMMAND, lang)) {
                 await processingAiAssistantMessage(ctx);
             }
 
@@ -50,7 +55,8 @@ function getMessageType(message: any) {
 }
 
 async function processingAiAssistantMessage(ctx: Scenes.SceneContext) {
-    const response = aiChatService.getMenuResponse();
+    const lang = getLang(ctx.scene.session);
+    const response = aiChatService.getMenuResponse(lang);
     return await ctx.reply(response);
 }
 

@@ -11,63 +11,78 @@ import { aiChatModels } from "../aiChat/enums/aiChatModels"
 import fs from 'fs'
 import { IMistake } from "./types/IMistake"
 import * as cheerio from "cheerio"
+import { translationsHandler } from "../../../api/middleware/translationsHandler"
+import { translationKeys } from "../../types/translations/TranslationsKeys"
+import { format, getLang, setLang } from "../../botService"
+import { SceneSessionData } from "telegraf/typings/scenes"
 
 export const testingService = {
-    getMenuResponse: async (chatId: number): Promise<IBotResponse> => {
+    getMenuResponse: async (chatId: number, scenes: SceneSessionData | undefined): Promise<IBotResponse> => {
+        const lang = getLang(scenes);
         const keyboard = Markup.keyboard([
-            ['Create a new test']
+            [translationsHandler(translationKeys.TESTING_CREATE_NEW_TEST_TEXT, lang)]
         ])
             .resize()
             .oneTime()
 
         const userTests = await getTests(chatId);
         if (userTests.length === 0) {
-            return { text: "Look like you don't have any test yet. Would you want to create one?", keyboard };
+            return { text: translationsHandler(translationKeys.TESTING_DONT_HAVE_TESTS_TEXT, lang), keyboard };
 
         } else {
             userTests.map(async (test) => {
                 let text;
                 switch (test.type) {
                     case TestTypes.CLASSIC:
-                        text = convertClassicTestToText(test);
+                        text = convertClassicTestToText(scenes, test);
                         break;
 
                     case TestTypes.EXAM:
-                        text = convertExamTestToText(test);
+                        text = convertExamTestToText(scenes, test);
                         break;
 
                     default:
-                        throw new Error('Test type is undefined and cannot be processed');
+                        throw new Error(translationsHandler(translationKeys.TESTING_UNDEF_TEST_TYPE_TEXT, lang));
                 }
 
                 const inlineKeyboard = Markup.inlineKeyboard([
-                    [{ text: `Pass the '${test.title}' test`, callback_data: `pass test id=${test._id}` }],
-                    [{ text: `Delete the '${test.title}' test`, callback_data: `delete test id=${test._id}` }]
+                    [{
+                        text: format(translationsHandler(translationKeys.TESTING_PASS_TEST_TEXT, lang), test.title),
+                        callback_data: `pass test id=${test._id}`
+                    }],
+
+                    [{
+                        text: format(translationsHandler(translationKeys.TESTING_DELETE_TEST_TEXT, lang), test.title),
+                        callback_data: `delete test id=${test._id}`
+                    }]
                 ]);
 
                 await bot.telegram.sendMessage(chatId, text, inlineKeyboard);
             })
 
-            return ({ text: 'choose the next action', keyboard })
+            return ({ text: translationsHandler(translationKeys.GENERAL_CHOOSE_NEXT_ACTION_TEXT, lang), keyboard })
         }
     },
 
     createTest: (ctx: Scenes.SceneContext): void => {
         getTestPropertiesFromUser(ctx).then(async res => {
+
+            const lang = getLang(ctx.session.__scenes);
             const title = res.state.title;
+
             const typeOfTest = res.state.typeOfTest;
             const documentId = res.state.documentId;
 
             if (!title) {
-                throw new Error('Title is required!');
+                throw new Error(translationsHandler(translationKeys.TESTING_TITLE_REQUIRED_TEXT, lang));
             }
 
             if (!typeOfTest || !(Object.values(TestTypes) as string[]).includes(typeOfTest)) {
-                throw new Error('Incorrect test type');
+                throw new Error(translationsHandler(translationKeys.TESTING_INCORRECT_TEST_TYPE_TEXT, lang));
             }
 
             if (!documentId) {
-                throw new Error('Document is required!');
+                throw new Error(translationsHandler(translationKeys.TESTING_DOCUMENT_REQUIRED_TEXT, lang));
             }
 
             const chatId = ctx.chat?.id as number;
@@ -76,44 +91,48 @@ export const testingService = {
 
             switch (typeOfTest) {
                 case 'exam':
-                    const questions = retrieveExamQuestionsFromHtmlContent(content);
+                    const questions = retrieveExamQuestionsFromHtmlContent(ctx.session.__scenes, content);
                     createdTest = await saveExamTest(title, chatId, typeOfTest as TestTypes, questions);
                     break;
 
                 case 'classic':
                     const questionsAndAnswers = getClassicQuestionsAndAnswers(content);
-                    const rightAnswers = getRightAnswers(questionsAndAnswers);
+                    const rightAnswers = getRightAnswers(ctx.session.__scenes, questionsAndAnswers);
                     const clearQuestAndAnswers = clearContentFromStyles(questionsAndAnswers);
                     createdTest = await saveClassicTest(title, chatId, clearQuestAndAnswers, rightAnswers);
                     break;
 
                 default:
-                    throw new Error('Incorrect test type')
+                    throw new Error(translationsHandler(translationKeys.TESTING_INCORRECT_TEST_TYPE_TEXT, lang))
             }
 
             const keyboard = Markup.keyboard([
-                ['back to tests']
+                [translationsHandler(translationKeys.TESTING_BACK_TO_TESTS_TEXT, lang)]
             ])
                 .resize()
                 .oneTime()
 
-            await ctx.reply(`The '${createdTest.title}' test has been successfully created!`, keyboard);
+            await ctx.reply(format(translationsHandler(translationKeys.TESTING_SUCCESS_CREATED_TEXT, lang), createdTest.title), keyboard);
         })
     },
 
     passTest: (ctx: Scenes.SceneContext, testId: string): void => {
         getAnswersFromUser(ctx, testId).then(async res => {
             const chatId = ctx.chat?.id;
+            const lang = getLang(ctx.session.__scenes);
+
             const answers = res.state.answers;
-            const test = await getTest(testId, chatId);
+            const test = await getTest(testId, chatId, ctx.session.__scenes);
 
             const prompt = fs.readFileSync('./testing files/exam_prompt.txt', 'utf-8');
             let correctAnswersCounter = 0;
+
             const rightAnswers = new Map(Object.entries(test.rightAnswers));
             let mistakes: IMistake[] = []
 
             answers.forEach(async (value, key) => {
                 switch (test.type) {
+
                     case TestTypes.CLASSIC:
                         const rightAnswer = rightAnswers.get(key);
 
@@ -127,10 +146,11 @@ export const testingService = {
                         break;
 
                     case TestTypes.EXAM:
-                        const question = prompt + `\n Question: ${value}`;
+                        const question = prompt + `\n ` + translationsHandler(translationKeys.TESTING_QUESTION_TEXT, lang) + `: ${value}`;
                         const responseFromAi = await aiChatService.getAnswerFromPrompt(question, undefined, aiChatModels.GEMINI_2_0_FLASH);
 
-                        const answer = 'Question: №' + key + value + '\n' + '_____________________\n' + responseFromAi;
+                        const answer = translationsHandler(translationKeys.TESTING_QUESTION_TEXT, lang) + ': №'
+                            + key + value + '\n' + '_____________________\n' + responseFromAi;
                         await ctx.reply(convertToMarkdownV2(answer), {
                             parse_mode: "MarkdownV2"
                         });
@@ -139,12 +159,12 @@ export const testingService = {
             })
 
             if (test.type === TestTypes.CLASSIC) {
-                const text = `You have ${correctAnswersCounter} correct answers\n` +
-                    `Mistakes: ${mistakes
+                const text = format(translationsHandler(translationKeys.TESTING_CORRECT_ANSWERS_TEXT, lang), correctAnswersCounter) + '\n' +
+                    translationsHandler(translationKeys.TESTING_MISTAKES_TEXT, lang) + `: ${mistakes
                         .map(mistake => "\n__________________________\n" +
-                            `||Question: №${mistake.question}\n` +
-                            `Your answer: ${mistake.userAnswer}\n` +
-                            `The correct answer: ${mistake.correctAnswer}||`
+                            '||' + translationsHandler(translationKeys.TESTING_QUESTION_TEXT, lang) + `: №${mistake.question}\n` +
+                            translationsHandler(translationKeys.TESTING_YOUR_ANSWER_TEXT, lang) + `: ${mistake.userAnswer}\n` +
+                            translationsHandler(translationKeys.TESTING_CORRECT_ANSWER_TEXT, lang) + `: ${mistake.correctAnswer}||`
                         )}`
 
                 await ctx.reply(convertToMarkdownV2(text), {
@@ -156,10 +176,12 @@ export const testingService = {
         })
     },
 
-    deleteTest: async (chatId: number | undefined, testId: string): Promise<void> => {
-        const test = await Test.findById(testId);
+    deleteTest: async (chatId: number | undefined, scenes: SceneSessionData | undefined, testId: string): Promise<void> => {
+        const lang = getLang(scenes);
+        const test = await Test.findOne({ chatId, _id: testId });
+
         if (!test) {
-            throw new Error(`The test with provided id (${testId}) wasn't found`)
+            throw new Error(translationsHandler(translationKeys.TESTING_TEST_WASNT_FOUND_TEXT, lang))
         }
 
         await Test.deleteOne({ '_id': testId });
@@ -170,18 +192,21 @@ async function getTests(chatId: number): Promise<ITest[]> {
     return await Test.find({ chatId });
 }
 
-function convertExamTestToText(test: ITest): string {
+function convertExamTestToText(scenes: SceneSessionData | undefined, test: ITest): string {
+    const lang = getLang(scenes);
+
     return test.title + '\n' +
-        `type: ${test.type}\n` +
-        `Questions:\n${Object.entries(test.questions)
+        translationsHandler(translationKeys.TESTING_TYPE_TEXT, lang) + `: ${test.type}\n` +
+        translationsHandler(translationKeys.TESTING_QUESTIONS_TEXT, lang) + `:\n${Object.entries(test.questions)
             .map(([key, value]) => `№${key}. ${value} `)
             .join('\n')}`;
 }
 
 function getTestPropertiesFromUser(ctx: any): Promise<ICreateTestSession> {
     return new Promise((resolve) => {
-        ctx.session = {}
-        ctx.scene.enter('CREATE_TEST');
+        const lang = getLang(ctx.session.__scenes);
+        ctx.session = {};
+        ctx.scene.enter('CREATE_TEST', { lang });
 
         const checkState = setInterval(() => {
             if (!ctx.wizard?.cursor) {
@@ -201,7 +226,8 @@ async function getHtmlContentFromDocument(fileId: string): Promise<string> {
     return (await mammoth.convertToHtml({ buffer })).value;
 }
 
-function retrieveExamQuestionsFromHtmlContent(content: string): string[] {
+function retrieveExamQuestionsFromHtmlContent(scenes: SceneSessionData | undefined, content: string): string[] {
+    const lang = getLang(scenes);
     let questions = [];
 
     if (content.includes('<ol>') || content.includes('<ul>')) {
@@ -219,7 +245,7 @@ function retrieveExamQuestionsFromHtmlContent(content: string): string[] {
         }
 
     } else {
-        throw new Error('Invalid document format. Please upload a valid document.');
+        throw new Error(translationsHandler(translationKeys.TESTING_INVALID_DOC_FORMAT_TEXT, lang));
     }
 
     return questions;
@@ -246,8 +272,9 @@ async function saveExamTest(title: string, chatId: number, type: TestTypes, ques
 
 function getAnswersFromUser(ctx: any, testId: string): Promise<IPassTestSession> {
     return new Promise((resolve) => {
+        const lang = getLang(ctx.session.__scenes);
         ctx.session = {}
-        ctx.scene.enter('PASS_TEST', { testId });
+        ctx.scene.enter('PASS_TEST', { testId, lang });
 
         const checkState = setInterval(() => {
             if (!ctx.wizard?.cursor) {
@@ -318,7 +345,8 @@ function getClassicQuestionsAndAnswers(htmlContent: string): Map<string, string[
     return questionsAndAnswers;
 }
 
-function getRightAnswers(questionsAndAnswers: Map<string, string[]>): Map<string, string> {
+function getRightAnswers(scenes: SceneSessionData | undefined, questionsAndAnswers: Map<string, string[]>): Map<string, string> {
+    const lang = getLang(scenes);
     let rightAnswers = new Map<string, string>();
 
     questionsAndAnswers.forEach((value, key) => {
@@ -334,7 +362,7 @@ function getRightAnswers(questionsAndAnswers: Map<string, string[]>): Map<string
         }
 
         if (!rightAnswer) {
-            throw new Error(`You didn't send the right answer for the question: '${key}'`);
+            throw new Error(translationsHandler(translationKeys.TESTING_UNDEF_RIGHT_ANSWER_TEXT, lang) + `: '${key}'`);
         }
 
         rightAnswers.set(key, rightAnswer);
@@ -372,11 +400,15 @@ async function saveClassicTest(title: string, chatId: number, questionsAndAnswer
     return test;
 }
 
-function convertClassicTestToText(test: ITest) {
+function convertClassicTestToText(scenes: SceneSessionData | undefined, test: ITest) {
+    const lang = getLang(scenes);
     const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
+
     return test.title + '\n' +
-        `type: ${test.type}\n` +
-        `Questions:\n${Object.entries(test.questions).map(([key, value]) => {
+        translationsHandler(translationKeys.TESTING_TYPE_TEXT, lang) + `: ${test.type}\n` +
+        translationsHandler(translationKeys.TESTING_QUESTIONS_TEXT, lang) +
+        `:\n${Object.entries(test.questions).map(([key, value]) => {
+
             let answersIndex = 0;
             const line = Array(value).map(val => '' + val)[0];
             const values = line.split(/,(?!\s)/g);
@@ -396,10 +428,12 @@ function convertClassicTestToText(test: ITest) {
         }).join('\n')}`;
 }
 
-export async function getTest(testId: string, chatId: number | undefined) {
+export async function getTest(testId: string, chatId: number | undefined, scenes: SceneSessionData | undefined) {
+    const lang = getLang(scenes);
     const test = await Test.findOne({ '_id': testId, chatId })
+
     if (!test) {
-        throw new Error(`The test with id '${testId}' not found or you don't have the access to this test`);
+        throw new Error(translationsHandler(translationKeys.TESTING_DONT_HAVE_ACCESS_TEXT, lang));
     }
 
     return test;

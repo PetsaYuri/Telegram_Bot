@@ -3,6 +3,10 @@ import { ISceneContext } from "../../../types/ISceneContext";
 import { TestTypes } from "../enums/testTypes";
 import { getTest } from "../testingService";
 import { ModeTypes } from "../../../types/ModeTypes";
+import { SceneSessionData } from "telegraf/typings/scenes";
+import { translationsHandler } from "../../../../api/middleware/translationsHandler";
+import { translationKeys } from "../../../types/translations/TranslationsKeys";
+import { getLang } from "../../../botService";
 
 interface IPassTestState {
     testId: string,
@@ -14,17 +18,22 @@ interface IPassTestState {
 
 export const passTestWizardScene = new Scenes.WizardScene<ISceneContext>('PASS_TEST',
     async (ctx) => {
-        const question = 'Enter the number of questions you wish to pass:';
+        const lang = getLang(ctx.session.__scenes);
+        const question = translationsHandler(translationKeys.SCENES_ENTER_NUM_OF_QUESTS_TEXT, lang);
+
         await ctx.reply(question);
         return ctx.wizard.next();
     },
 
     async (ctx: any) => {
+        const lang = getLang(ctx.session.__scenes);
         const state = getState(ctx);
         const numberOfQuest = Number.parseInt(ctx.text as string);
 
         if (Number.isNaN(numberOfQuest)) {
-            await ctx.reply('Error: you must enter a number, please try again');
+            await ctx.reply(translationsHandler(translationKeys.SCENES_ERROR_TEXT, lang) +
+                translationsHandler(translationKeys.SCENES_MUST_ENTER_NUMBER_TEXT, lang));
+
             ctx.wizard.back();
             return ctx.wizard.steps[ctx.wizard.cursor](ctx);
         }
@@ -34,8 +43,9 @@ export const passTestWizardScene = new Scenes.WizardScene<ISceneContext>('PASS_T
 
         state.index = 0;
         state.answers = new Map<string, string>();
-        state.questions = await getQuestionToPass(chatId, testId, numberOfQuest);
-        state.testType = (await getTest(testId, chatId)).type;
+        state.questions = await getQuestionsToPass(chatId, ctx.session.__scenes, testId, numberOfQuest);
+        console.log(state.questions)
+        state.testType = (await getTest(testId, chatId, ctx.session.__scenes)).type;
 
         await sendQuestion(ctx);
         return ctx.wizard.next();
@@ -44,6 +54,7 @@ export const passTestWizardScene = new Scenes.WizardScene<ISceneContext>('PASS_T
     async (ctx) => {
         const state = getState(ctx);
         let answers = state.answers;
+        console.log(state.index)
 
         if (state.index > 0) {
             const prevQuestion = Array.from(state.questions.entries())[state.index - 1]
@@ -55,7 +66,8 @@ export const passTestWizardScene = new Scenes.WizardScene<ISceneContext>('PASS_T
             ctx.session.__scenes = {
                 cursor: NaN, state: {
                     answers,
-                    mode: ModeTypes.TESTING
+                    mode: ModeTypes.TESTING,
+                    lang: getLang(ctx.session.__scenes)
                 }
             };
             return ctx.scene.leave();
@@ -67,19 +79,27 @@ export const passTestWizardScene = new Scenes.WizardScene<ISceneContext>('PASS_T
     }
 )
 
-async function getQuestionToPass(chatId: number | undefined, testId: string, numberOfQuest: number): Promise<Map<string, string | string[]>> {
-    const test = await getTest(testId, chatId);
+async function getQuestionsToPass(chatId: number | undefined, scenes: SceneSessionData | undefined, testId: string, numberOfQuest: number): Promise<Map<string, string | string[]>> {
+    const lang = getLang(scenes);
+    const test = await getTest(testId, chatId, scenes);
+
     const questions = new Map(Object.entries(test.questions));
     const testSize = questions.size;
 
     if (numberOfQuest > testSize) {
-        throw new Error('The entered number of question is bigger then the questions size')
+        throw new Error(translationsHandler(translationKeys.SCENES_ENTERED_NUM_BIGGER_TEXT, lang))
     }
 
     let mixedQuestions = new Map<string, string | string[]>();
     for (let i = 0; i < numberOfQuest; i++) {
         const randomNum = getRandomNumber(0, testSize);
         const question = Array.from(questions.entries())[randomNum]
+
+        if (mixedQuestions.get(question[0])) {
+            i--;
+            continue;
+        }
+
         mixedQuestions.set(question[0], question[1]);
     }
 

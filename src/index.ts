@@ -15,6 +15,8 @@ import { passTestWizardScene } from './bot/items/testing/scenes/passTestScene';
 import { ISceneContext } from './bot/types/ISceneContext';
 import { editTaskWizardScene } from './bot/items/classroomHelper/scenes/editTaskScene';
 import { createNotifScene } from './bot/items/classroomHelper/scenes/createNotifScene';
+import { updateBotCommands } from './bot/types/translations/botCommands';
+import { LangTypes } from './bot/types/translations/LangTypes';
 
 dotenv.config();
 mongoose.connect(ENV.MONGODB_URI);
@@ -38,6 +40,7 @@ bot.use(stage.middleware() as MiddlewareFn<Context>)
 botController(bot);
 bot.launch();
 bot.catch(errorHandler)
+updateBotCommands(LangTypes.EN);
 
 app.listen(ENV.PORT, () => {
     console.log(`Server is running on port: ${ENV.PORT}`)
