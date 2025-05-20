@@ -5,6 +5,7 @@ export interface IEditTaskSession {
         description?: string,
         dueDate?: string,
         dueTime?: string,
-        maxPoints?: string
+        maxPoints?: string,
+        isForcedExit: boolean
     }
 }

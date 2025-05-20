@@ -14,8 +14,8 @@ export const aiChatService = {
         return translationsHandler(translationKeys.AI_ASSISTANT_MENU_RESPONSE, lang);
     },
 
-    getAnswerFromPrompt: async (prompt: string, fileLinks?: Array<URL>, modelType: aiChatModels = aiChatModels.GEMINI_1_5_FLASH): Promise<string> => {
-        const model = genAI.getGenerativeModel({ model: modelType }) //
+    getAnswerFromPrompt: async (prompt: string, fileLinks?: Array<URL>, modelType: aiChatModels = aiChatModels.GEMINI_2_0_FLASH): Promise<string> => {
+        const model = genAI.getGenerativeModel({ model: modelType }) //gemini-2.5-pro-exp-03-25
         let result;
 
         if (fileLinks) {
@@ -23,6 +23,14 @@ export const aiChatService = {
 
             for (let fileLink of fileLinks) {
                 imageParts.push(await convertUrlToGenPart(fileLink, 'image/jpeg'));
+            }
+
+            if (prompt === '' && imageParts.length > 0) {
+                prompt = "You are an assistant that always responds in the same language as the user's input. " +
+                    'The attached image contains a question. First, extract the question from the image using OCR. ' +
+                    'Then, answer it fully and clearly **in the same language** the question was written in. ' +
+                    'Important: Do not translate the question or your answer into English. Use the same language as in the image. ' +
+                    'Now, please read the image and answer the question.'
             }
 
             result = await model.generateContent([prompt, ...imageParts]);

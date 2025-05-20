@@ -97,3 +97,39 @@ ol li:hover {
     cursor: pointer;
     transition: color 0.2s ease-in-out;
 }
+
+.lang-toggle {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin: 20px;
+}
+
+.lang-btn {
+    background-color: #f0f0f0;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.lang-btn:hover {
+    background-color: #ddd;
+    border-color: #888;
+}
+
+.lang-btn.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #0056b3;
+}
+
+.content {
+    max-width: 1200px;
+    padding: 40px 20px;
+    margin: auto;
+    text-align: center;
+}

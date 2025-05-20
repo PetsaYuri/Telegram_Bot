@@ -13,7 +13,7 @@ import { IMistake } from "./types/IMistake"
 import * as cheerio from "cheerio"
 import { translationsHandler } from "../../../api/middleware/translationsHandler"
 import { translationKeys } from "../../types/translations/TranslationsKeys"
-import { format, getLang, setLang } from "../../botService"
+import { format, getLang } from "../../botService"
 import { SceneSessionData } from "telegraf/typings/scenes"
 
 export const testingService = {
@@ -66,10 +66,16 @@ export const testingService = {
 
     createTest: (ctx: Scenes.SceneContext): void => {
         getTestPropertiesFromUser(ctx).then(async res => {
-
+            const chatId = ctx.chat?.id as number;
             const lang = getLang(ctx.session.__scenes);
-            const title = res.state.title;
 
+            if (res.state.isForcedExit) {
+                const res = await testingService.getMenuResponse(chatId, ctx.session.__scenes);
+                await ctx.reply(res.text, res.keyboard);
+                return;
+            }
+
+            const title = res.state.title;
             const typeOfTest = res.state.typeOfTest;
             const documentId = res.state.documentId;
 
@@ -85,7 +91,6 @@ export const testingService = {
                 throw new Error(translationsHandler(translationKeys.TESTING_DOCUMENT_REQUIRED_TEXT, lang));
             }
 
-            const chatId = ctx.chat?.id as number;
             const content = await getHtmlContentFromDocument(documentId);
             let createdTest: ITest;
 
@@ -121,19 +126,24 @@ export const testingService = {
             const chatId = ctx.chat?.id;
             const lang = getLang(ctx.session.__scenes);
 
+            if (res.state.isForcedExit) {
+                const res = await testingService.getMenuResponse(chatId as number, ctx.session.__scenes);
+                await ctx.reply(res.text, res.keyboard);
+                return;
+            }
+
             const answers = res.state.answers;
             const test = await getTest(testId, chatId, ctx.session.__scenes);
 
-            const prompt = fs.readFileSync('./testing files/exam_prompt.txt', 'utf-8');
+            const prompt = fs.readFileSync('./exam_prompt.txt', 'utf-8');
             let correctAnswersCounter = 0;
-
-            const rightAnswers = new Map(Object.entries(test.rightAnswers));
             let mistakes: IMistake[] = []
 
             answers.forEach(async (value, key) => {
                 switch (test.type) {
 
                     case TestTypes.CLASSIC:
+                        const rightAnswers = new Map(Object.entries(test.rightAnswers));
                         const rightAnswer = rightAnswers.get(key);
 
                         if (rightAnswer === value || rightAnswer?.substring(3, rightAnswer.length) === value) {
@@ -262,7 +272,7 @@ async function saveExamTest(title: string, chatId: number, type: TestTypes, ques
     questions.forEach((question) => {
         if (question) {
             const splitedQuestion = question.split(/\./, 2);
-            test.questions[splitedQuestion[0]] = splitedQuestion[1].trimStart();
+            (test.questions as unknown as Map<string, string>).set(splitedQuestion[0], splitedQuestion[1].trimStart())
         }
     });
 

@@ -4,5 +4,6 @@ export interface ICreateTestSession {
         title?: string,
         typeOfTest?: string,
         documentId?: string,
+        isForcedExit: boolean
     }
 }

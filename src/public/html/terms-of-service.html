@@ -4,34 +4,77 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Terms of Service</title>
+        <title id="terms_of_service"></title>
         <link rel="icon" href="images/classroom_helper_logo.jpg" type="image/icon type">
         <link rel="stylesheet" href="css/styles.css">
     </head>
 
     <body>
-        <h1>Terms of Service</h1>
-        <p class="italic">Last updated: 10.03.2025</p>
+        <div class="lang-toggle">
+            <button class="lang-btn" onclick="setLanguage('en')">English language</button>
+            <button class="lang-btn" onclick="setLanguage('ua')">Українська мова</button>
+        </div>
 
-        <p>By using Classroom Helper, you agree to the following:</p>
-        <h3>🔹Usage Restrictions:</h3>
-        <ul class="container">
-            <li>You must follow Google’s API policies.</li>
-            <li>Do not use the app for illegal activities.</li>
-        </ul>
+        <main class="content">
+            <h1 id="terms_of_service"></h1>
+            <p class="italic" id="last_updated"></p>
 
-        <h3>🔹 No Guarantee:</h3>
-        <ul class="container">
-            <li>We do not guarantee uninterrupted service.</li>
-        </ul>
+            <p id="using_chatbot"></p>
+            <h3 id="usage_restr"></h3>
 
-        <h3>🔹 Termination:</h3>
-        <ul class="container">
-            <li>We can revoke access if you violate terms.</li>
-        </ul>
+            <ul class="container">
+                <li id="follow_google_policies"></li>
+                <li id="do_not_use_app"></li>
+            </ul>
 
-        <p>📧 Contact us at: <strong>petsa.yurii@student.uzhnu.edu.ua</strong></p>
-        <a href="/">Back to Homepage</a>
+            <h3 id="no_guarantee"></h3>
+            <ul class="container">
+                <li id="do_not_guarantee"></li>
+            </ul>
+
+            <h3 id="termination"></h3>
+            <ul class="container">
+                <li id="can_revoke_access"></li>
+            </ul>
+
+            <p id="contact_us">
+                <strong>petsa.yurii@student.uzhnu.edu.ua</strong>
+            </p>
+            <a href="/" id="back_homepage"></a>
+        </main>
+
+        <script>
+            let translations = {};
+
+            async function loadTranslations() {
+                translations = await (await fetch('./translations/privacyPolicyTrans.json')).json();
+                setLanguage('ua');
+            }
+
+            function setLanguage(lang) {
+                Object.keys(translations[lang]).forEach(id => {
+                    const el = document.getElementById(id);
+
+                    if (el) {
+                        const text = translations[lang][id];
+
+                        if (text.includes("<") && text.includes("</")) {
+                            el.innerHTML = text
+
+                        } else {
+                            el.textContent = text;
+                        }
+                    }
+                });
+
+                document.querySelectorAll('.lang-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.textContent.includes(lang.toUpperCase()));
+                });
+            }
+
+            window.onload = loadTranslations;
+        </script>
+
     </body>
 
 </html>

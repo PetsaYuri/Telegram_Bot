@@ -4,78 +4,127 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Privacy Policy</title>
-        <link rel="icon" href="images/classroom_helper_logo.jpg" type="image/icon type">
+        <title id="privacy_policy"></title>
+        <link rel="icon" href="images/edu_helper_logo.jpg" type="image/icon type">
         <link rel="stylesheet" href="css/styles.css">
     </head>
 
     <body>
-        <h1>Privacy Policy</h1>
+        <div class="lang-toggle">
+            <button class="lang-btn" onclick="setLanguage('en')">English language</button>
+            <button class="lang-btn" onclick="setLanguage('ua')">Українська мова</button>
+        </div>
 
-        <p class="italic">Last Updated: 11.03.2025</p>
-        <p><strong>1. Introduction</strong></p>
-        <p>This Privacy Policy explains how Classroom Helper <strong>collects, processes, and protects</strong> your
-            information when you use our services.
-        </p>
+        <main class="content">
+            <h1 id="privacy_policy"></h1>
+            <p class="italic" id="last_updated"></p>
 
-        <p><strong>2. Information We Collect</strong></p>
-        <p>We collect the following data when you use the application:</p>
-        <ul class="container">
-            <li><strong>Authentication Data:</strong> OAuth2 authentication tokens to access Google Classroom.</li>
-            <li><strong>Course Data:</strong> Course ID, course title, and last retrieval timestamp (only if accessed
-                through our service).</li>
-            <li><strong>Encrypted Refresh Token:</strong> Stored securely but saved in encrypted format within the
-                database.
-            </li>
-            <li><strong>Telegram Chat ID:</strong> If connected via Telegram, we store the chat ID to enable bot
-                interactions.
-            </li>
-        </ul>
+            <p>
+                <strong id="introduction"></strong>
+            </p>
 
-        <p><strong>3. How We Use Your Information</strong></p>
-        <p>We use this data to:</p>
-        <ul class="container">
-            <li>Authenticate and retrieve Google Classroom data on your behalf.</li>
-            <li>Improve and personalize user experience.</li>
-            <li>Enable Telegram-based interactions if opted in.</li>
-            <li>Ensure security and prevent unauthorized access.</li>
-        </ul>
+            <p id="policy_explains"></p>
 
-        <p><strong>4. Data Retention & Deletion</strong></p>
-        <ul class="container">
-            <li>We retain user data <strong>only as long as necessary</strong> to provide our services.
-            </li>
-            <li>If you <strong>revoke Google access</strong>, all associated data (including classroom data and Telegram
-                chat ID) is deleted within <strong>30 days</strong>.</li>
-            <li>You can request <strong>immediate data deletion</strong> by contacting us at:
-                <strong>petsa.yurii@student.uzhnu.edu.ua</strong>.
-            </li>
-            <li><strong>Refresh tokens are stored in an encrypted format but as plain text in the database</strong>,
-                meaning they are secured but still exist in a retrievable state.</li>
-        </ul>
+            <p>
+                <strong id="info_collect"></strong>
+            </p>
 
-        <p><strong>5. Data Sharing & Security</strong></p>
-        <ul class="container">
-            <li><strong>We do not sell or share</strong> personal data with third parties.</li>
-            <li>OAuth2 authentication tokens are <strong>encrypted before storage</strong>, but they remain stored in
-                the database in an accessible format.</li>
-            <li>We follow industry security standards to protect sensitive information.</li>
-        </ul>
+            <p id="collect_data"></p>
+            <ul class="container">
+                <li id="auth_data"></li>
+                <li id="course_data"></li>
+                <li id="encrypted_token"></li>
+                <li id="telegram_chat_id"></li>
+            </ul>
 
-        <p><strong>6. Your Rights</strong></p>
-        <p>You have the right to:</p>
-        <ul class="container">
-            <li>Revoke Google access at any time.</li>
-            <li>Request deletion of stored data.</li>
-            <li>Contact us for any data privacy concerns.</li>
-        </ul>
+            <p>
+                <strong id="how_use_info"></strong>
+            </p>
 
-        <p><strong>7. Contact Us</strong></p>
-        <p>For any questions or privacy concerns, please contact us at:
-            <strong>petsa.yurii@student.uzhnu.edu.ua</strong>
-        </p>
+            <p id="we_use_data_to"></p>
+            <ul class="container">
+                <li id="auth_retrieve_data"></li>
+                <li id="improve_user_exp"></li>
+                <li id="enable_interact"></li>
+                <li id="ensure_security"></li>
+            </ul>
 
-        <a href="/">Back to Homepage</a>
+            <p>
+                <strong id="data_retention"></strong>
+            </p>
+
+            <ul class="container">
+                <li id="retain_data"></li>
+                <li id="associated_data"></li>
+
+                <li id="data_deletion">
+                    <strong>petsa.yurii@student.uzhnu.edu.ua</strong>.
+                </li>
+
+                <li id="refresh_tokens_stored"></li>
+            </ul>
+
+            <p>
+                <strong id="data_sharing"></strong>
+            </p>
+
+            <ul class="container">
+                <li id="do_not_sell"></li>
+                <li id="oauth2_auth_tokens"></li>
+                <li id="follow_secur_standards"></li>
+            </ul>
+
+            <p><strong id="your_rights"></strong></p>
+            <p id="have_right"></p>
+
+            <ul class="container">
+                <li id="revoke_access_any_time"></li>
+                <li id="deletion_stored_data"></li>
+                <li id="contact_us_for_data"></li>
+            </ul>
+
+            <p>
+                <strong id="contact_us"></strong>
+            </p>
+
+            <p id="contact_us_for_privacy">
+                <strong>petsa.yurii@student.uzhnu.edu.ua</strong>
+            </p>
+
+            <a href="/" id="back_homepage"></a>
+        </main>
+
+        <script>
+            let translations = {};
+
+            async function loadTranslations() {
+                translations = await (await fetch('./translations/privacyPolicyTrans.json')).json();
+                setLanguage('ua');
+            }
+
+            function setLanguage(lang) {
+                Object.keys(translations[lang]).forEach(id => {
+                    const el = document.getElementById(id);
+
+                    if (el) {
+                        const text = translations[lang][id];
+
+                        if (text.includes("<") && text.includes("</")) {
+                            el.innerHTML = text
+
+                        } else {
+                            el.textContent = text;
+                        }
+                    }
+                });
+
+                document.querySelectorAll('.lang-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.textContent.includes(lang.toUpperCase()));
+                });
+            }
+
+            window.onload = loadTranslations;
+        </script>
     </body>
 
 </html>

@@ -34,8 +34,12 @@ export const scenesTranslations = {
         enterNewDueTimeText: 'Enter a new due time (%s). Format: hh:mm',
 
         errorText: 'Error: ',
-        selectTestTypeText: 'Select the type of test:',
-        attachDocText: 'Attach document:',
+        selectTestTypeText: "Select the type of test (for test with question and answers, select the 'classic' option, and for test " +
+            "with only questions (without answers) select the 'exam' type (during the test users enter an answer and the AI (Gemini) evaluates it)):",
+
+        attachDocText: "Attach document (the file must be in 'docx' format (a Word document) and must follow this format: questions must end " +
+            "with a question mark ('?') and (if it's the 'classic' type, with answers) the answers must be separated by a new line ('\\n' symbol)):",
+        incorrectFileExtenText: "incorrect file extension. The file must have a '.docx' (Word document) extension, please try again",
 
         enterNumOfQuestsText: 'Enter the number of questions you wish to pass:',
         mustEnterNumberText: 'You must enter a number, please try again',
@@ -77,8 +81,12 @@ export const scenesTranslations = {
         enterNewDueTimeText: 'Введіть новий час виконання (%s). Формат: hh:mm',
 
         errorText: 'Помилка: ',
-        selectTestTypeText: 'Виберіть тип тесту:',
-        attachDocText: 'Додайте документ:',
+        selectTestTypeText: "Виберіть тип тесту (для тесту з питаннями та відповідями виберіть варіант 'класичний', а для тесту лише з питаннями (без відповідей) " +
+            "виберіть тип 'екзамен' (під час тесту користувачі вводять відповідь, а ШІ (Gemini) її оцінює)):",
+
+        attachDocText: "Додайте документ (файл має бути у форматі «docx» (документ Word) і має відповідати такому формату: питання повинні закінчуватися " +
+            "знаком питання ('?') та (якщо це «класичний» тип, з відповідями) відповіді мають бути розділені новим рядком (символом '\\n')):",
+        incorrectFileExtenText: "неправильне розширення файлу. Файл має мати розширення '.docx' (Word документ), спробуйте ще раз",
 
         enterNumOfQuestsText: 'Введіть кількість питань, на які ви хочете відповісти:',
         mustEnterNumberText: 'Ви повинні ввести число, спробуйте ще раз',

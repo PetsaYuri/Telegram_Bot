@@ -40,7 +40,7 @@ bot.use(stage.middleware() as MiddlewareFn<Context>)
 botController(bot);
 bot.launch();
 bot.catch(errorHandler)
-updateBotCommands(LangTypes.EN);
+updateBotCommands(LangTypes.UA);
 
 app.listen(ENV.PORT, () => {
     console.log(`Server is running on port: ${ENV.PORT}`)

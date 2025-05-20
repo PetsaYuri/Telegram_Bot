@@ -25,12 +25,11 @@ export const testingController = async (ctx: any) => {
             break;
 
         default:
-
-            const callbackData = ctx?.callbackQuery.data;
-            if (!callbackData && !text) {
+            if (!ctx?.callbackQuery) {
                 return await ctx.reply(translationsHandler(translationKeys.GENERAL_UNKNOWN_COMMAND_TEXT, lang));
             }
 
+            const callbackData = ctx?.callbackQuery.data;
             const passTestMatch = callbackData.match('^pass test id=([a-f\\d]{24})$');
             const deleteTestMatch = callbackData.match('^delete test id=([a-f\\d]{24})$');
 

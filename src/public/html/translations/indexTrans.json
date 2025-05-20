@@ -1,0 +1,45 @@
+{
+    "en": {
+        "title": "Education Helper",
+        "welcome": "Welcome to Education Helper ChatBot",
+
+        "manage_classroom": "Manage your classroom workspace efficiently with our tool. Education Helper is a Telegram bot that helps users view and manages their classroom workspaces.",
+        "how_works": "How It Works",
+
+        "bot_start": "Start the bot by searching for on Telegram.",
+        "enter_menu": "Enter /menu to access all features:",
+
+        "ai_chat": "Chat with AI directly inside Telegram",
+        "classroom_workspaces": "Manage your Google Classroom workspaces",
+        "own_tests": "Upload and pass your own tests",
+
+        "auth_perms": "Authentication & Permissions",
+        "bot_uses_google_auth": "This bot uses Google authentication to access your Google Classroom data securely. We only request the necessary permissions to provide you with the best experience.",
+        "any_questions": "For any questions or support, contact us at email: ",
+
+        "privacy_policy": "Privacy Policy",
+        "terms_of_service": "Terms of Service"
+    },
+
+    "ua": {
+        "title": "Помічник у сфері освіти",
+        "welcome": "Ласкаво просимо до чат-бота Education Helper",
+
+        "manage_classroom": "Ефективно керуйте робочим простором свого класу за допомогою нашого інструменту. Education Helper – це Telegram бот, який допомагає користувачам переглядати та керувати робочими просторами своїх класів.",
+        "how_works": "Як це працює",
+
+        "bot_start": "Запустіть бота, здійснивши пошук у Telegram.",
+        "enter_menu": "Введіть /menu, щоб отримати доступ до всіх функцій:",
+
+        "ai_chat": "Спілкуйтеся зі штучним інтелектом безпосередньо в Telegram",
+        "classroom_workspaces": "Керуйте робочими просторами Google Classroom",
+        "own_tests": "Завантажуйте та складайте власні тести",
+
+        "auth_perms": "Автентифікація та дозволи",
+        "bot_uses_google_auth": "Цей бот використовує автентифікацію Google для безпечного доступу до ваших даних Google Classroom. Ми запитуємо лише необхідні дозволи, щоб забезпечити вам найкращий досвід.",
+        "any_questions": "З будь-якими питаннями або підтримкою звертайтеся до нас за електронною адресою: ",
+
+        "privacy_policy": "Політика конфіденційності",
+        "terms_of_service": "Умови надання послуг"
+    }
+}

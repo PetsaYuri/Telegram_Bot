@@ -58,14 +58,15 @@ export const classroomHelperController = async (ctx: any) => {
                 return await processingCreateTaskMessage(ctx, createTaskMatch);
             }
 
-            const callbackData = ctx?.callbackQuery?.data;
-            if (!callbackData && !text) {
+            if (!ctx?.callbackQuery) {
                 return await ctx.reply(translationsHandler(translationKeys.GENERAL_UNKNOWN_COMMAND_TEXT, lang));
             }
 
+            const callbackData = ctx?.callbackQuery?.data;
+
             const editMaterialMatch = callbackData?.match('^edit materialId=(\\d{12}), courseId=(\\d{12})$');
-            const deleteMaterialMatch = callbackData.match('^delete materialId=(\\d{12}), courseId=(\\d{12})$');
-            const setNotificationMatch = callbackData.match('^set notification material=(\\d{12}) course=(\\d{12})$');
+            const deleteMaterialMatch = callbackData?.match('^delete materialId=(\\d{12}), courseId=(\\d{12})$');
+            const setNotificationMatch = callbackData?.match('^set notification material=(\\d{12}) course=(\\d{12})$');
 
             if (editMaterialMatch) {
                 await processingEditMaterialMessage(ctx, editMaterialMatch);

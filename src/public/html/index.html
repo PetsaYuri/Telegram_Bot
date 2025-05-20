@@ -4,37 +4,74 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Classroom Helper</title>
+        <title id="title"></title>
         <meta name="google-site-verification" content="O3Hb_s167WusxOOfF1NAesCBkFG_V5btVqwIYSJyNio" />
-        <link rel="icon" href="images/classroom_helper_logo.jpg" type="image/icon type">
+        <link rel="icon" href="images/edu_helper_logo.jpg" type="image/icon type">
         <link rel="stylesheet" href="css/styles.css">
     </head>
 
     <body>
-        <h1>Welcome to Classroom Helper</h1>
-        <img src="images/classroom_helper.jpg" alt="classroom helper logo">
+        <div class="lang-toggle">
+            <button class="lang-btn" onclick="setLanguage('en')">English language</button>
+            <button class="lang-btn" onclick="setLanguage('ua')">Українська мова</button>
+        </div>
 
-        <p>Manage your classroom efficiently with our tool. Classroom Helper is a Telegram bot that helps users view and
-            manages their classroom workspaces.</p>
+        <main class="content">
+            <h1 id="welcome"></h1>
+            <img src="images/edu_helper.jpg" alt="education helper logo">
 
-        <p><strong>How It Works</strong></p>
-        <ol class="container">
-            <li>Start the bot by searching for <strong>@classroom_helper_bot</strong> on Telegram.</li>
-            <li>Enter /menu to begin interacting with the bot.</li>
-            <li>If authentication is required, click the link the bot provides to sign in with Google.</li>
-            <li>After signing in, you will be redirected back to Telegram, and the bot will continue assisting you.</li>
-        </ol>
+            <p id="manage_classroom"></p>
 
-        <p><strong>Authentication & Permissions</strong></p>
-        <ul class="container">
-            <li>This bot uses Google authentication to access your Google Classroom data securely. We only request the
-                necessary permissions to provide you with the best experience.</li>
-            <li>For any questions or support, contact us at email: <strong>petsa.yurii@student.uzhnu.edu.ua</strong>
-            </li>
-        </ul>
+            <p><strong id="how_works"></strong></p>
+            <ol class="container">
 
-        <a href="/privacy-policy">Privacy Policy</a>
-        <a href="/terms-of-service">Terms of Service</a>
+                <li id="bot_start"><strong>@edu_helper_chat_bot</strong></li>
+                <li id="enter_menu">
+
+                    <ul class="container">
+                        <li id="ai_chat"></li>
+                        <li id="classroom_workspaces"></li>
+                        <li id="own_tests"></li>
+                    </ul>
+
+                </li>
+            </ol>
+
+            <p><strong id="auth_perms"></strong></p>
+            <ul class="container">
+                <li id="bot_uses_google_auth"></li>
+                <li id="any_questions"><strong>petsa.yurii@student.uzhnu.edu.ua</strong>
+                </li>
+            </ul>
+
+            <a href="/privacy-policy" id="privacy_policy"></a>
+            <a href="/terms-of-service" id="terms_of_service"></a>
+        </main>
+
+        <script>
+            let translations = {};
+
+            async function loadTranslations() {
+                translations = await (await fetch('./translations/indexTrans.json')).json();
+                setLanguage('ua');
+            }
+
+            function setLanguage(lang) {
+                Object.keys(translations[lang]).forEach(id => {
+                    const el = document.getElementById(id);
+
+                    if (el) {
+                        el.textContent = translations[lang][id];
+                    }
+                });
+
+                document.querySelectorAll('.lang-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.textContent.includes(lang.toUpperCase()));
+                });
+            }
+
+            window.onload = loadTranslations;
+        </script>
     </body>
 
 </html>

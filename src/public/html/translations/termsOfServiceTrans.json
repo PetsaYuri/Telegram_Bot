@@ -1,0 +1,41 @@
+{
+    "en": {
+        "terms_of_service": "Terms of Service",
+        "last_updated": "Last updated: 10.03.2025",
+
+        "using_chatbot": "By using the classroom helper part of the Education Helper ChatBot, you agree to the following:",
+        "usage_restr": "🔹 Usage Restrictions:",
+
+        "follow_google_policies": "You must follow Google’s API policies.",
+        "do_not_use_app": "Do not use the app for illegal activities.",
+
+        "no_guarantee": "🔹 No Guarantee:",
+        "do_not_guarantee": "We do not guarantee uninterrupted service.",
+
+        "termination": "🔹 Termination:",
+        "can_revoke_access": "We can revoke access if you violate terms.",
+
+        "contact_us": "📧 Contact us at:",
+        "back_homepage": "Back to Homepage"
+    },
+
+    "ua": {
+        "terms_of_service": "Умови надання послуг",
+        "last_updated": "Останнє оновлення: 10.03.2025",
+
+        "using_chatbot": "Використовуючи частину чат-бота Education Helper для допомоги в навчанні, ви погоджуєтеся з наступним:",
+        "usage_restr": "🔹 Обмеження використання:",
+
+        "follow_google_policies": "Ви повинні дотримуватися політик API Google.",
+        "do_not_use_app": "Не використовуйте додаток для незаконної діяльності.",
+
+        "no_guarantee": "🔹 Без гарантії:",
+        "do_not_guarantee": "Ми не гарантуємо безперебійне обслуговування.",
+
+        "termination": "🔹 Припинення:",
+        "can_revoke_access": "Ми можемо скасувати доступ, якщо ви порушите умови.",
+
+        "contact_us": "📧 Зв'яжіться з нами за адресою:",
+        "back_homepage": "Назад на головну сторінку"
+    }
+}

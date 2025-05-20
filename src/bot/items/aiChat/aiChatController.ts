@@ -17,8 +17,8 @@ export const aiChatController = async (ctx: any) => {
                 return ctx.reply(translationsHandler(translationKeys.AI_ASSISTANT_ENTER_SOME_TEXT, lang));
             }
 
-            else if (text === '/ai_assistant' || translationsHandler(translationKeys.GENERAL_AI_ASSISTANT_TEXT, lang)
-                || translationsHandler(translationKeys.GENERAL_AI_ASSISTANT_COMMAND, lang)) {
+            else if (text === '/ai_assistant' || text === translationsHandler(translationKeys.GENERAL_AI_ASSISTANT_TEXT, lang)
+                || text === translationsHandler(translationKeys.GENERAL_AI_ASSISTANT_COMMAND, lang)) {
                 await processingAiAssistantMessage(ctx);
             }
 

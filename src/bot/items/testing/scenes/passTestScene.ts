@@ -6,7 +6,7 @@ import { ModeTypes } from "../../../types/ModeTypes";
 import { SceneSessionData } from "telegraf/typings/scenes";
 import { translationsHandler } from "../../../../api/middleware/translationsHandler";
 import { translationKeys } from "../../../types/translations/TranslationsKeys";
-import { getLang } from "../../../botService";
+import { exitKeyboard, forceExit, getLang } from "../../../botService";
 
 interface IPassTestState {
     testId: string,
@@ -21,16 +21,21 @@ export const passTestWizardScene = new Scenes.WizardScene<ISceneContext>('PASS_T
         const lang = getLang(ctx.session.__scenes);
         const question = translationsHandler(translationKeys.SCENES_ENTER_NUM_OF_QUESTS_TEXT, lang);
 
-        await ctx.reply(question);
+        await ctx.reply(question, exitKeyboard);
         return ctx.wizard.next();
     },
 
     async (ctx: any) => {
         const lang = getLang(ctx.session.__scenes);
         const state = getState(ctx);
-        const numberOfQuest = Number.parseInt(ctx.text as string);
+        if (ctx.text === '/exit') {
+            forceExit(ctx, ModeTypes.TESTING);
+            return;
+        }
 
+        const numberOfQuest = Number.parseInt(ctx.text as string);
         if (Number.isNaN(numberOfQuest)) {
+
             await ctx.reply(translationsHandler(translationKeys.SCENES_ERROR_TEXT, lang) +
                 translationsHandler(translationKeys.SCENES_MUST_ENTER_NUMBER_TEXT, lang));
 
@@ -44,7 +49,6 @@ export const passTestWizardScene = new Scenes.WizardScene<ISceneContext>('PASS_T
         state.index = 0;
         state.answers = new Map<string, string>();
         state.questions = await getQuestionsToPass(chatId, ctx.session.__scenes, testId, numberOfQuest);
-        console.log(state.questions)
         state.testType = (await getTest(testId, chatId, ctx.session.__scenes)).type;
 
         await sendQuestion(ctx);
@@ -54,7 +58,6 @@ export const passTestWizardScene = new Scenes.WizardScene<ISceneContext>('PASS_T
     async (ctx) => {
         const state = getState(ctx);
         let answers = state.answers;
-        console.log(state.index)
 
         if (state.index > 0) {
             const prevQuestion = Array.from(state.questions.entries())[state.index - 1]

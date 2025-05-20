@@ -6,10 +6,16 @@ import { LangTypes } from "./types/translations/LangTypes";
 import { translationsHandler } from "../api/middleware/translationsHandler";
 import { translationKeys } from "./types/translations/TranslationsKeys";
 import { updateBotCommands } from "./types/translations/botCommands";
+import { ENV } from "../config/zod/env";
 
 const ENGLISH_LANGUAGE_TEXT = 'English language';
 const UKRAINIAN_LANGUAGE_TEXT = 'Українська мова';
-export const LANGUAGES = [ENGLISH_LANGUAGE_TEXT, UKRAINIAN_LANGUAGE_TEXT]
+export const LANGUAGES = [ENGLISH_LANGUAGE_TEXT, UKRAINIAN_LANGUAGE_TEXT];
+
+export const exitButton = [['/exit']];
+export const exitKeyboard = Markup.keyboard(exitButton)
+    .resize()
+    .oneTime();
 
 export const botService = {
 
@@ -17,12 +23,15 @@ export const botService = {
         setMode(scenes, null);
         const lang = getLang(scenes)
 
-        const keyboard = Markup.keyboard(getItemsButton(scenes))
+        const keyboard = Markup.keyboard([
+            ...getItemsButton(scenes),
+            [translationsHandler(translationKeys.GENERAL_CHANGE_LANGUAGE_TEXT, lang)]
+        ]);
         const text = translationsHandler(translationKeys.GENERAL_MAIN_MENU_TEXT, lang);
 
         return ({
             text,
-            keyboard: keyboard,
+            keyboard,
         });
     },
 
@@ -49,6 +58,57 @@ export const botService = {
             .oneTime()
 
         return ({ text, keyboard });
+    },
+
+    getWelcomePageResponse: (scenes: SceneSessionData | undefined): IBotResponse => {
+        const lang = getLang(scenes);
+        const keyboard = Markup.inlineKeyboard([
+            [{
+                text: translationsHandler(translationKeys.GENERAL_VIEW_THROUGH_WEB_APP_TEXT, lang),
+                web_app: { url: `${ENV.HOST_URI}` }
+            }],
+
+            [{
+                text: translationsHandler(translationKeys.GENERAL_LINK_TEXT, lang),
+                url: `${ENV.HOST_URI}`
+            }]
+        ]);
+
+        return ({ text: translationsHandler(translationKeys.GENERAL_VIEW_WELCOME_PAGE_TEXT, lang), keyboard });
+    },
+
+    getPrivacyPolicyResponse: (scenes: SceneSessionData | undefined): IBotResponse => {
+        const lang = getLang(scenes);
+        const keyboard = Markup.inlineKeyboard([
+            [{
+                text: translationsHandler(translationKeys.GENERAL_VIEW_THROUGH_WEB_APP_TEXT, lang),
+                web_app: { url: `${ENV.HOST_URI}/privacy-policy` }
+            }],
+
+            [{
+                text: translationsHandler(translationKeys.GENERAL_LINK_TEXT, lang),
+                url: `${ENV.HOST_URI}/privacy-policy`
+            }]
+        ]);
+
+        return ({ text: translationsHandler(translationKeys.GENERAL_VIEW_PRIVACY_POLICY_TEXT, lang), keyboard });
+    },
+
+    getTermsOfServiceResponse: (scenes: SceneSessionData | undefined): IBotResponse => {
+        const lang = getLang(scenes);
+        const keyboard = Markup.inlineKeyboard([
+            [{
+                text: translationsHandler(translationKeys.GENERAL_VIEW_THROUGH_WEB_APP_TEXT, lang),
+                web_app: { url: `${ENV.HOST_URI}/terms-of-service` }
+            }],
+
+            [{
+                text: translationsHandler(translationKeys.GENERAL_LINK_TEXT, lang),
+                url: `${ENV.HOST_URI}/terms-of-service`
+            }]
+        ]);
+
+        return ({ text: translationsHandler(translationKeys.GENERAL_VIEW_TERMS_OF_SERVICE_TEXT, lang), keyboard })
     }
 }
 
@@ -74,7 +134,7 @@ export function setMode(scenes: SceneSessionData | undefined, mode: ModeTypes | 
 
 export function getLang(scenes: SceneSessionData | undefined): LangTypes {
     const lang = (scenes?.state as { lang: LangTypes })?.lang;
-    return lang ?? LangTypes.EN
+    return lang ?? LangTypes.UA;
 }
 
 export function setLang(scenes: SceneSessionData | undefined, lang: string | LangTypes): void {
@@ -108,8 +168,7 @@ function defineLanguage(lang: string): LangTypes {
 function getItemsButton(scenes: SceneSessionData | undefined) {
     const lang = getLang(scenes);
     return [
-        [translationsHandler(translationKeys.GENERAL_AI_ASSISTANT_TEXT, lang)],
-        [translationsHandler(translationKeys.GENERAL_CLASSROOM_HELPER_TEXT, lang)],
+        [translationsHandler(translationKeys.GENERAL_AI_ASSISTANT_TEXT, lang), translationsHandler(translationKeys.GENERAL_CLASSROOM_HELPER_TEXT, lang)],
         [translationsHandler(translationKeys.GENERAL_TESTING_TEXT, lang)],
     ]
 }
@@ -129,3 +188,16 @@ export function addPrefixToKeysAndValues<T extends Record<string, string>, P ext
 
     return result;
 }
+
+export function forceExit(ctx: any, mode: ModeTypes) {
+    ctx.session.__scenes = {
+        cursor: NaN,
+        state: {
+            isForcedExit: true,
+            lang: getLang(ctx.session.__scenes),
+            mode
+        }
+    };
+
+    return ctx.scene.leave();
+} 

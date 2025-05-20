@@ -1,6 +1,7 @@
 export interface ICreateNotifSession {
     cursor: number,
     state: {
-        time?: number
+        time?: number,
+        isForcedExit: boolean
     }
 }

@@ -1,0 +1,107 @@
+{
+    "en": {
+        "privacy_policy": "Privacy Policy",
+        "last_updated": "Last Updated: 11.03.2025",
+
+        "introduction": "1. Introduction",
+        "policy_explains": "This Privacy Policy explains how Classroom Helper <strong>collects, processes, and protects</strong> your information when you use our services.",
+
+        "collects_processes": "collects, processes, and protects",
+        "info_collect": "2. Information We Collect",
+
+        "collect_data": "We collect the following data when you use the application:",
+        "auth_data": "<strong>Authentication Data:</strong> OAuth2 authentication tokens to access Google Classroom.",
+
+        "course_data": "<strong>Course Data:</strong> Course ID, course title, and last retrieval timestamp (only if accessed through our service).",
+        "encrypted_token": "<strong>Encrypted Refresh Token:</strong> Stored securely in encrypted format within the database.",
+
+        "telegram_chat_id": "<strong>Telegram Chat ID:</strong> If connected via Telegram, we store the chat ID to enable bot interactions.",
+        "how_use_info": "3. How We Use Your Information",
+
+        "we_use_data_to": "We use this data to:",
+        "auth_retrieve_data": "Authenticate and retrieve Google Classroom data on your behalf.",
+
+        "improve_user_exp": "Improve and personalize user experience.",
+        "enable_interact": "Enable Telegram-based interactions if opted in.",
+
+        "ensure_security": "Ensure security and prevent unauthorized access.",
+        "data_retention": "4. Data Retention & Deletion",
+
+        "retain_data": "We retain user data <strong>only as long as necessary</strong> to provide our services.",
+        "associated_data": "If you <strong>revoke Google access</strong>, all associated data (including classroom data and Telegram chat ID) is deleted within <strong>30 days</strong>.",
+
+        "data_deletion": "You can request <strong>immediate data deletion</strong> by contacting us at:",
+        "refresh_tokens_stored": "<strong>Refresh tokens are stored in an encrypted format but as plain text in the database</strong>, meaning they are secured but still exist in a retrievable state.",
+
+        "data_sharing": "5. Data Sharing & Security",
+        "do_not_sell": "<strong>We do not sell or share</strong> personal data with third parties.",
+
+        "oauth2_auth_tokens": "OAuth2 authentication tokens are <strong>encrypted before storage</strong>, but they remain stored in the database in an accessible format.",
+        "follow_secur_standards": "We follow industry security standards to protect sensitive information.",
+
+        "your_rights": "6. Your Rights",
+        "have_right": "You have the right to:",
+
+        "revoke_access_any_time": "Revoke Google access at any time.",
+        "deletion_stored_data": "Request deletion of stored data.",
+
+        "contact_us_for_data": "Contact us for any data privacy concerns.",
+        "contact_us": "7. Contact Us",
+
+        "contact_us_for_privacy": "For any questions or privacy concerns, please contact us at:",
+        "back_homepage": "Back to Homepage"
+    },
+
+    "ua": {
+        "privacy_policy": "Політика конфіденційності",
+        "last_updated": "Останнє оновлення: 11.03.2025",
+
+        "introduction": "1. Вступ",
+        "policy_explains": "У цій Політиці конфіденційності пояснюється, як працює Помічник у класі <strong>збирає, обробляє та захищає</strong> вашу інформацію, коли ви користуєтеся нашими послугами.",
+
+        "collects_processes": "збирає, обробляє та захищає",
+        "info_collect": "2. Інформація, яку ми збираємо",
+
+        "collect_data": "Ми збираємо такі дані, коли ви користуєтеся застосунком:",
+        "auth_data": "<strong>Дані автентифікації:</strong> токени автентифікації OAuth2 для доступу до Google Classroom.",
+
+        "course_data": "<strong>Дані курсу:</strong> ідентифікатор курсу, назва курсу та позначка часу останнього отримання (лише якщо доступ здійснювався через наш сервіс).",
+        "encrypted_token": "<strong>Зашифрований токен оновлення:</strong> зберігається безпечно, та в зашифрованому форматі в базі даних.",
+
+        "telegram_chat_id": "<strong>Ідентифікатор чату Telegram:</strong> якщо підключено через Telegram, ми зберігаємо ідентифікатор чату, щоб забезпечити взаємодію з ботом..",
+        "how_use_info": "3. Як ми використовуємо вашу інформацію",
+
+        "we_use_data_to": "Ми використовуємо ці дані для:",
+        "auth_retrieve_data": "Автентифікувати та отримувати дані Google Classroom від вашого імені.",
+
+        "improve_user_exp": "Покращуйте та персоналізуйте користувацький досвід.",
+        "enable_interact": "Увімкнути взаємодію через Telegram, якщо це увімкнено.",
+
+        "ensure_security": "Забезпечення безпеки та запобігання несанкціонованому доступу.",
+        "data_retention": "4. Зберігання та видалення даних",
+
+        "retain_data": "Ми зберігаємо дані користувачів <strong>лише доти, доки це необхідно</strong> щоб надавати наші послуги.",
+        "associated_data": "Якщо ви <strong>скасувати доступ Google</strong>, усі пов’язані дані (включно з даними класу та ідентифікатором чату Telegram) видаляються протягом <strong>30 днів</strong>.",
+
+        "data_deletion": "Ви можете подати запит <strong>негайне видалення даних</strong> зв'язавшись з нами за адресою:",
+        "refresh_tokens_stored": "<strong>Токени оновлення зберігаються в базі даних у зашифрованому форматі як звичайний текст.</strong>, це означає, що вони захищені, але все ще існують у стані, який можна відновити.",
+
+        "data_sharing": "5. Обмін даними та безпека",
+        "do_not_sell": "<strong>Ми не продаємо та не ділимося</strong> персональними даним із третіми сторонами.",
+
+        "oauth2_auth_tokens": "Токени автентифікації OAuth2 – це <strong>зашифровано перед зберіганням</strong>, але вони залишаються збереженими в базі даних у доступному форматі.",
+        "follow_secur_standards": "Ми дотримуємося галузевих стандартів безпеки для захисту конфіденційної інформації.",
+
+        "your_rights": "6. Ваші права",
+        "have_right": "Ви маєте право:",
+
+        "revoke_access_any_time": "Скасувати доступ Google у будь-який час.",
+        "deletion_stored_data": "Запит на видалення збережених даних.",
+
+        "contact_us_for_data": "Звертайтеся до нас з будь-яких питань щодо конфіденційності даних.",
+        "contact_us": "7. Зв'яжіться з нами",
+
+        "contact_us_for_privacy": "Якщо у вас виникли запитання чи проблеми з конфіденційністю, будь ласка, зв’яжіться з нами за адресою:",
+        "back_homepage": "Назад на головну сторінку"
+    }
+}

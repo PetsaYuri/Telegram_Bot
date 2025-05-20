@@ -172,6 +172,12 @@ export const classroomHelperService = {
         const lang = getLang(ctx.session.__scenes);
 
         getTaskPropsFromUserForCreate(ctx).then(async res => {
+            if (res.state.isForcedExit) {
+                const res = await classroomHelperService.getMenuResponse(chatId, ctx.session.__scenes);
+                await ctx.reply(res.text, res.keyboard);
+                return;
+            }
+
             const taskProps = setTaskProps(ctx.session.__scenes, res.state);
             const link = await classroomService.createTask(chatId, ctx.session.__scenes, courseName, taskProps);
 
@@ -193,6 +199,12 @@ export const classroomHelperService = {
         }
 
         getTaskPropsFromUserForEdit(ctx, task).then(async res => {
+            if (res.state.isForcedExit) {
+                const res = await classroomHelperService.getMenuResponse(chatId, ctx.session.__scenes);
+                await ctx.reply(res.text, res.keyboard);
+                return;
+            }
+
             const taskProps = setTaskProps(ctx.session.__scenes, res.state);
             const link = await classroomService.editTask(chatId, ctx.session.__scenes, courseId, taskId, taskProps);
 
@@ -491,7 +503,7 @@ function setTaskProps(scenes: SceneSessionData | undefined, state: {
     return taskProps;
 }
 
-function getInlineKeyboardWithURI(text: string, uri: string): Markup.Markup<InlineKeyboardMarkup> {
+export function getInlineKeyboardWithURI(text: string, uri: string): Markup.Markup<InlineKeyboardMarkup> {
     return Markup.inlineKeyboard([
         [Markup.button.url(text, uri)]
     ]);

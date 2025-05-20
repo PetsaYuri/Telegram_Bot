@@ -4,12 +4,13 @@ export const generalTranslations = {
         mainMenuText: 'Main menu:',
 
         chooseLanguageCommand: '/language',
+        setChosenLanguageText: 'English language is successfully established!',
+
         chooseLanguageText: 'Choose language',
+        changeLanguageText: 'Change language',
 
         englishLanguageText: 'English language',
         ukrainianLanguageText: 'Ukrainian language',
-
-        setChosenLanguageText: 'English language is successfully established!',
 
         aiAssistantText: 'AI assistant',
         aiAssistantCommand: '/ai_assistant',
@@ -26,6 +27,13 @@ export const generalTranslations = {
         daysText: 'days',
         hoursText: 'hours',
         minutesText: 'minutes',
+
+        viewThroughWebAppText: 'View through web app',
+        linkText: 'Link',
+
+        viewWelcomePageText: 'Choose your preferred method to view the welcome page for this application',
+        viewPrivacyPolicyText: 'Choose your preferred method to view the Privacy Policy',
+        viewTermsOfServiceText: 'Choose your preferred method to view the terms of service'
     },
 
     ua: {
@@ -33,12 +41,13 @@ export const generalTranslations = {
         mainMenuText: 'Головне меню:',
 
         chooseLanguageCommand: '/мова',
+        setChosenLanguageText: 'Українська мова успішно встановлена!',
+
         chooseLanguageText: 'Виберіть мову',
+        changeLanguageText: 'Змінити мову',
 
         englishLanguageText: 'Англійська мова',
         ukrainianLanguageText: 'Українська мова',
-
-        setChosenLanguageText: 'Українська мова успішно встановлена!',
 
         aiAssistantText: 'ШІ асистент',
         aiAssistantCommand: '/ші_асистент',
@@ -55,5 +64,12 @@ export const generalTranslations = {
         daysText: 'днів',
         hoursText: 'годин',
         minutesText: 'хвилин',
+
+        viewThroughWebAppText: 'Перегляд через веб-додаток',
+        linkText: 'Посилання',
+
+        viewWelcomePageText: 'Виберіть бажаний спосіб перегляду сторінки привітання цієї програми',
+        viewPrivacyPolicyText: 'Виберіть бажаний спосіб перегляду Політики конфіденційності',
+        viewTermsOfServiceText: 'Виберіть бажаний спосіб перегляду умов надання послуг'
     }
 }

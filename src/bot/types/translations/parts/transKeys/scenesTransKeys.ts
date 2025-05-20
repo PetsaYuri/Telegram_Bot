@@ -36,7 +36,9 @@ export const scenesTransKeys = addPrefixToKeysAndValues('scenes', {
 
     ERROR_TEXT: 'errorText',
     SELECT_TEST_TYPE_TEXT: 'selectTestTypeText',
+
     ATTACH_DOC_TEXT: 'attachDocText',
+    INCORRECT_FILE_EXTEN_TEXT: 'incorrectFileExtenText',
 
     ENTER_NUM_OF_QUESTS_TEXT: 'enterNumOfQuestsText',
     MUST_ENTER_NUMBER_TEXT: 'mustEnterNumberText',

@@ -17,6 +17,7 @@ export const botController = (bot: Telegraf<Scenes.SceneContext>) => {
         let res;
 
         switch (text) {
+            case '/start':
             case '/back':
             case '/menu':
             case translationsHandler(translationKeys.GENERAL_MAIN_MENU_COMMAND, lang):
@@ -25,7 +26,20 @@ export const botController = (bot: Telegraf<Scenes.SceneContext>) => {
 
             case '/language':
             case translationsHandler(translationKeys.GENERAL_CHOOSE_LANGUAGE_COMMAND, lang):
+            case translationsHandler(translationKeys.GENERAL_CHANGE_LANGUAGE_TEXT, lang):
                 res = botService.getChooseLanguage(ctx.scene.session);
+                break;
+
+            case '/welcome':
+                res = botService.getWelcomePageResponse(ctx.scene.session);
+                break;
+
+            case '/privacy_policy':
+                res = botService.getPrivacyPolicyResponse(ctx.session.__scenes);
+                break;
+
+            case '/terms_of_service':
+                res = botService.getTermsOfServiceResponse(ctx.session.__scenes);
                 break;
         }
 
@@ -45,7 +59,11 @@ export const botController = (bot: Telegraf<Scenes.SceneContext>) => {
     bot.on('callback_query', async (ctx) => {
         await passContextToItemControllers(ctx);
     })
-}
+
+    bot.on([message('photo'), message('voice')], async (ctx) => {
+        await aiChatController(ctx);
+    })
+}//set better prompt for image and voice (check if image without text - set good prompt)
 
 async function defineMode(ctx: any) {
     const text = ctx.text;
