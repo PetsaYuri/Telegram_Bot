@@ -1,7 +1,6 @@
-import { addPrefixToKeysAndValues } from "../../../../botService";
+import { addPrefixToKeysAndValues } from "../../../botService";
 
 export const classroomHelperTransKeys = addPrefixToKeysAndValues('classroom_helper', {
-    AUTHORISATION_TEXT: 'authorisationText',
     BACK_TO_COURSES_TEXT: 'backToCoursesText',
 
     MANAGE_COURSES_TEXT: 'manageCoursesText',
@@ -35,6 +34,9 @@ export const classroomHelperTransKeys = addPrefixToKeysAndValues('classroom_help
     EDIT_TEXT: 'editText',
     DELETE_TEXT: 'deleteText',
 
+    CREATED_TASK_NOTIF_TEXT: 'createdTaskNotifText',
+    UPDATED_TASK_NOTIF_TEXT: 'updatedTaskNotifText',
+
     SUCCESS_CREATED_TEXT: 'successCreatedText',
     SUCCESS_UPDATED_TEXT: 'successUpdatedText',
     SUCCESS_DELETED_TEXT: 'successDeletedText',
@@ -56,4 +58,32 @@ export const classroomHelperTransKeys = addPrefixToKeysAndValues('classroom_help
     CANNOT_DEFINE_TYPE_TEXT: 'cannotDefineTypeText',
 
     COULDNT_FIND_COURSE_TEXT: 'couldntFindCourseText',
+    SHOW_TASK_CALENDAR_TEXT: 'showTaskCalendarText',
+
+    TASK_AND_BRACKET_TEXT: 'taskAndBracketText',
+    COURSE_AND_BRACKET_TEXT: 'courseAndBracketText',
+
+    NO_TASKS_TO_COMPLETE_TEXT: 'noTasksToCompleteText',
+    TASKS_TO_COMPLETE_TEXT: 'tasksToCompleteText',
+
+    PRESS_TO_VIEW_UP_TASKS_TEXT: 'pressToViewUpTasksText',
+    SHOW_UP_TASKS_TEXT: 'showUpTasksText',
+    UP_TASKS_TEXT: 'upTasksText',
+
+    RETURN_TO_CHOOSING_OWN_COURSE_TEXT: 'returnToChoosingOwnCourseText',
+    RETURN_TO_CHOOSING_AVAIL_COURSE_TEXT: 'returnToChoosingAvailCourseText',
+    RETURN_TO_HELPER_MENU_TEXT: 'returnToHelperMenuText',
+
+    SHOW_TASK_CALENDAR_FOR_COURSE_TEXT: 'showTaskCalendarForCourseText',
+    SHOW_TASK_CALENDAR_FOR_COURSE_REGEX: 'showTaskCalendarForCourseRegex',
+    NO_MATERIALS_CREATED_TEXT: 'noMaterialsCreatedText',
+
+    LOG_OUT_TEXT: 'logOutText',
+    SUCCESS_AUTHORISATION_TEXT: 'successAuthorisationText',
+
+    PREVIEW_OF_TEXT: 'previewOfText',
+    SUCCESSFULLY_LOGED_OUT_TEXT: 'successfullyLogedOutText',
+
+    OPEN_MATERIALS_TEXT: 'openMaterialsText',
+    NO_MATER_WITH_PROVIDED_ID_TEXT: 'noMaterWithProvidedIdText'
 })

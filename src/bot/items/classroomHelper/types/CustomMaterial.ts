@@ -10,5 +10,6 @@ export interface IMaterial {
     creationTime: string,
     type: MaterialTypes,
     dueDate?: classroom_v1.Schema$Date,
-    dueTime?: classroom_v1.Schema$TimeOfDay
+    dueTime?: classroom_v1.Schema$TimeOfDay,
+    materials?: classroom_v1.Schema$Material[]
 }

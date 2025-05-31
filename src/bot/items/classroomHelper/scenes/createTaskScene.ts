@@ -2,7 +2,7 @@ import { Markup, Scenes } from "telegraf";
 import { ISceneContext } from "../../../types/ISceneContext";
 import { ModeTypes } from "../../../types/ModeTypes";
 import { translationsHandler } from "../../../../api/middleware/translationsHandler";
-import { translationKeys } from "../../../types/translations/TranslationsKeys";
+import { translationKeys } from "../../../translations/TranslationsKeys";
 import { SceneSessionData } from "telegraf/typings/scenes";
 import { exitButton, exitKeyboard, forceExit, format, getLang } from "../../../botService";
 

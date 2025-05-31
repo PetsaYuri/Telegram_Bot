@@ -58,7 +58,9 @@
                 <li id="associated_data"></li>
 
                 <li id="data_deletion">
-                    <strong>petsa.yurii@student.uzhnu.edu.ua</strong>.
+                </li>
+
+                <li id="data_deletion_by_yourself">
                 </li>
 
                 <li id="refresh_tokens_stored"></li>
@@ -99,7 +101,7 @@
 
             async function loadTranslations() {
                 translations = await (await fetch('./translations/privacyPolicyTrans.json')).json();
-                setLanguage('ua');
+                setLanguage('en');
             }
 
             function setLanguage(lang) {

@@ -7,7 +7,7 @@ import { classroom_v1 } from "@googleapis/classroom";
 import { decryptUserData } from "../../../api/services/userService";
 import { ITask } from "./types/ITask";
 import { translationsHandler } from "../../../api/middleware/translationsHandler";
-import { translationKeys } from "../../types/translations/TranslationsKeys";
+import { translationKeys } from "../../translations/TranslationsKeys";
 import { format, getLang } from "../../botService";
 import { SceneSessionData } from "telegraf/typings/scenes";
 
@@ -80,7 +80,8 @@ export const classroomService = {
                     creationTime: material.creationTime as string,
                     type: material.type,
                     dueDate: material.dueDate,
-                    dueTime: material.dueTime
+                    dueTime: material.dueTime,
+                    materials: material.materials
                 }) as IMaterial
             });
 
@@ -180,6 +181,90 @@ export const classroomService = {
 
     getCourseIdByName: async (chatId: number | undefined, scenes: SceneSessionData | undefined, courseName: string): Promise<string | null | undefined> => {
         return (await getCourseByName(chatId, scenes, courseName))?.id;
+    },
+
+    getAllMaterialsWithActualDueDate: async (chatId: number | undefined, scenes: SceneSessionData | undefined, dateStart?: Date, courseId?: string): Promise<IMaterial[]> => {
+        let userCourses: ICourseInfo[] = [];
+
+        if (courseId) {
+            const specifiedCourse = await getCourseById(chatId, scenes, courseId);
+
+            if (specifiedCourse && specifiedCourse.id && specifiedCourse.name && specifiedCourse.ownerId) {
+                userCourses.push({ id: specifiedCourse.id, name: specifiedCourse.name, ownerId: specifiedCourse.ownerId });
+            }
+
+        } else {
+            userCourses = await classroomService.getAllAvailableCourses(chatId, scenes);
+        }
+
+        let userMaterials: IMaterial[] = [];
+
+        for (const course of userCourses) {
+            const materials = await classroomService.getAllMaterials(chatId, scenes, course.id);
+
+            const filteredMater = materials
+                .filter((material) => {
+                    if (material.dueDate) {
+                        const taskDate = new Date(`${material.dueDate.year}.${material.dueDate.month}.${material.dueDate.day}`);
+                        const splitedCurrentDate = new Date().toDateString().split(' ');
+                        const currentDate = new Date(splitedCurrentDate[1] + ' ' + splitedCurrentDate[2] + ', ' + splitedCurrentDate[3]);
+
+                        if (taskDate >= currentDate) {
+
+                            if (dateStart) {
+                                if (taskDate >= dateStart) {
+                                    return true;
+
+                                } else {
+                                    return false;
+                                }
+                            }
+
+                            return true;
+                        }
+                        return false;
+                    }
+
+                });
+
+            userMaterials = userMaterials.concat(filteredMater)
+        };
+
+        return userMaterials;
+    },
+
+    getMaterial: async (chatId: number | undefined, scenes: SceneSessionData | undefined, courseId: string, materialId: string) => {
+        const classroom = await getClassroom(chatId, scenes);
+        const courseWork = (await classroom.courses.courseWork.get({
+            courseId,
+            id: materialId
+        })).data;
+
+        if (courseWork) {
+            return courseWork;
+        }
+
+        const courseWorkMaterial = (await classroom.courses.courseWorkMaterials.get({
+            courseId,
+            id: materialId
+        })).data;
+
+        if (courseWorkMaterial) {
+            return courseWork;
+        }
+
+        const announcement = (await classroom.courses.announcements.get({
+            courseId,
+            id: materialId
+        })).data;
+
+        if (announcement) {
+            return announcement;
+        }
+
+        const lang = getLang(scenes);
+        throw new Error(translationsHandler(translationKeys.SCENES_ERROR_TEXT, lang) + ' '
+            + translationsHandler(translationKeys.CLASSROOM_HELPER_NO_MATER_WITH_PROVIDED_ID_TEXT, lang))
     }
 }
 

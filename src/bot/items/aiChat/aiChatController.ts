@@ -2,7 +2,7 @@ import { Scenes } from "telegraf";
 import { aiChatService, getFileLinksFromContext, markdownToHtml } from "./aiChatService";
 import { getLang } from "../../botService";
 import { translationsHandler } from "../../../api/middleware/translationsHandler";
-import { translationKeys } from "../../types/translations/TranslationsKeys";
+import { translationKeys } from "../../translations/TranslationsKeys";
 
 export const aiChatController = async (ctx: any) => {
     const messageType = getMessageType(ctx.message);

@@ -5,14 +5,14 @@ import { classroomHelperController } from './items/classroomHelper/classroomHelp
 import { testingController } from './items/testing/testingController';
 import { ModeTypes } from './types/ModeTypes';
 import { translationsHandler } from '../api/middleware/translationsHandler';
-import { translationKeys } from './types/translations/TranslationsKeys';
+import { translationKeys } from './translations/TranslationsKeys';
 import { message } from 'telegraf/filters'
-import { LangTypes } from './types/translations/LangTypes';
+import { LangTypes } from './translations/LangTypes';
 
 export const botController = (bot: Telegraf<Scenes.SceneContext>) => {
 
     bot.on(message('text'), async (ctx) => {
-        const text = ctx.text;
+        const text = ctx.text as string;
         const lang = getLang(ctx.scene.session) ?? LangTypes.EN;
         let res;
 

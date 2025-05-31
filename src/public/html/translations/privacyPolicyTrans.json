@@ -1,10 +1,10 @@
 {
     "en": {
         "privacy_policy": "Privacy Policy",
-        "last_updated": "Last Updated: 11.03.2025",
+        "last_updated": "Last Updated: 31.05.2025",
 
         "introduction": "1. Introduction",
-        "policy_explains": "This Privacy Policy explains how Classroom Helper <strong>collects, processes, and protects</strong> your information when you use our services.",
+        "policy_explains": "This Privacy Policy explains how Education Helper ChatBot <strong>collects, processes, and protects</strong> your information when you use our services.",
 
         "collects_processes": "collects, processes, and protects",
         "info_collect": "2. Information We Collect",
@@ -30,14 +30,15 @@
         "retain_data": "We retain user data <strong>only as long as necessary</strong> to provide our services.",
         "associated_data": "If you <strong>revoke Google access</strong>, all associated data (including classroom data and Telegram chat ID) is deleted within <strong>30 days</strong>.",
 
-        "data_deletion": "You can request <strong>immediate data deletion</strong> by contacting us at:",
+        "data_deletion": "You can request <strong>immediate data deletion</strong> by contacting us at: <strong>petsa.yurii@student.uzhnu.edu.ua</strong>.",
+        "data_deletion_by_yourself": "You can also <strong>delete your data</strong> by pressing the 'Log out' button in the 'Classroom Helper' menu (to invoke the menu use the '/classroom_helper' command).",
         "refresh_tokens_stored": "<strong>Refresh tokens are stored in an encrypted format but as plain text in the database</strong>, meaning they are secured but still exist in a retrievable state.",
 
         "data_sharing": "5. Data Sharing & Security",
         "do_not_sell": "<strong>We do not sell or share</strong> personal data with third parties.",
 
         "oauth2_auth_tokens": "OAuth2 authentication tokens are <strong>encrypted before storage</strong>, but they remain stored in the database in an accessible format.",
-        "follow_secur_standards": "We follow industry security standards to protect sensitive information.",
+        "follow_secur_standards": "We follow industry security standards to <strong>protect sensitive information</strong>.",
 
         "your_rights": "6. Your Rights",
         "have_right": "You have the right to:",
@@ -54,7 +55,7 @@
 
     "ua": {
         "privacy_policy": "Політика конфіденційності",
-        "last_updated": "Останнє оновлення: 11.03.2025",
+        "last_updated": "Останнє оновлення: 31.05.2025",
 
         "introduction": "1. Вступ",
         "policy_explains": "У цій Політиці конфіденційності пояснюється, як працює Помічник у класі <strong>збирає, обробляє та захищає</strong> вашу інформацію, коли ви користуєтеся нашими послугами.",
@@ -83,14 +84,15 @@
         "retain_data": "Ми зберігаємо дані користувачів <strong>лише доти, доки це необхідно</strong> щоб надавати наші послуги.",
         "associated_data": "Якщо ви <strong>скасувати доступ Google</strong>, усі пов’язані дані (включно з даними класу та ідентифікатором чату Telegram) видаляються протягом <strong>30 днів</strong>.",
 
-        "data_deletion": "Ви можете подати запит <strong>негайне видалення даних</strong> зв'язавшись з нами за адресою:",
+        "data_deletion": "Ви можете подати запит <strong>негайне видалення даних</strong> зв'язавшись з нами за адресою: <strong>petsa.yurii@student.uzhnu.edu.ua</strong>.",
+        "data_deletion_by_yourself": "Ви також можете <strong>видалити свої дані</strong>, натиснувши кнопку «Вийти» в меню «Classroom помічник» (щоб викликати меню, скористайтеся командою «/classroom_helper»).",
         "refresh_tokens_stored": "<strong>Токени оновлення зберігаються в базі даних у зашифрованому форматі як звичайний текст.</strong>, це означає, що вони захищені, але все ще існують у стані, який можна відновити.",
 
         "data_sharing": "5. Обмін даними та безпека",
         "do_not_sell": "<strong>Ми не продаємо та не ділимося</strong> персональними даним із третіми сторонами.",
 
         "oauth2_auth_tokens": "Токени автентифікації OAuth2 – це <strong>зашифровано перед зберіганням</strong>, але вони залишаються збереженими в базі даних у доступному форматі.",
-        "follow_secur_standards": "Ми дотримуємося галузевих стандартів безпеки для захисту конфіденційної інформації.",
+        "follow_secur_standards": "Ми дотримуємося галузевих стандартів безпеки <strong>для захисту конфіденційної інформації</strong>.",
 
         "your_rights": "6. Ваші права",
         "have_right": "Ви маєте право:",

@@ -3,7 +3,7 @@ import { ISceneContext } from "../../../types/ISceneContext";
 import ms, { StringValue } from "ms";
 import { convertMsToDateStr } from "../classroomHelperService";
 import { translationsHandler } from "../../../../api/middleware/translationsHandler";
-import { translationKeys } from "../../../types/translations/TranslationsKeys";
+import { translationKeys } from "../../../translations/TranslationsKeys";
 import { exitButton, forceExit, getLang } from "../../../botService";
 import { ModeTypes } from "../../../types/ModeTypes";
 

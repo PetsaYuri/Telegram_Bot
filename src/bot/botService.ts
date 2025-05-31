@@ -2,10 +2,10 @@ import { Markup } from "telegraf";
 import { IBotResponse } from "./types/CustomBotResponse";
 import { SceneSessionData } from "telegraf/typings/scenes";
 import { ModeTypes } from "./types/ModeTypes";
-import { LangTypes } from "./types/translations/LangTypes";
+import { LangTypes } from "./translations/LangTypes";
 import { translationsHandler } from "../api/middleware/translationsHandler";
-import { translationKeys } from "./types/translations/TranslationsKeys";
-import { updateBotCommands } from "./types/translations/botCommands";
+import { translationKeys } from "./translations/TranslationsKeys";
+import { updateBotCommands } from "./translations/botCommands";
 import { ENV } from "../config/zod/env";
 
 const ENGLISH_LANGUAGE_TEXT = 'English language';
@@ -134,7 +134,7 @@ export function setMode(scenes: SceneSessionData | undefined, mode: ModeTypes | 
 
 export function getLang(scenes: SceneSessionData | undefined): LangTypes {
     const lang = (scenes?.state as { lang: LangTypes })?.lang;
-    return lang ?? LangTypes.UA;
+    return lang ?? LangTypes[`${ENV.LANGUAGE.toUpperCase() as keyof typeof LangTypes}`];
 }
 
 export function setLang(scenes: SceneSessionData | undefined, lang: string | LangTypes): void {

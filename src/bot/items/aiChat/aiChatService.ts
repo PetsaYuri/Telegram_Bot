@@ -3,8 +3,8 @@ import { ENV } from "../../../config/zod/env";
 import { marked } from "marked";
 import { aiChatModels } from "./enums/aiChatModels";
 import { translationsHandler } from "../../../api/middleware/translationsHandler";
-import { translationKeys } from "../../types/translations/TranslationsKeys";
-import { LangTypes } from "../../types/translations/LangTypes";
+import { translationKeys } from "../../translations/TranslationsKeys";
+import { LangTypes } from "../../translations/LangTypes";
 
 const genAI = new GoogleGenerativeAI(ENV.GOOGLE_GEMINI_API_KEY);
 

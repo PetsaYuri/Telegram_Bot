@@ -3,12 +3,15 @@ import User from '../models/users';
 import { bot } from '../..';
 import { ENV } from '../../config/zod/env';
 import { encryptUserData } from './userService';
+import { classroomHelperService } from '../../bot/items/classroomHelper/classroomHelperService';
+import { translationsHandler } from '../middleware/translationsHandler';
+import { translationKeys } from '../../bot/translations/TranslationsKeys';
 
 export const OAUTH2_CLIENT = new OAuth2Client(ENV.CLIENT_ID, ENV.CLIENT_SECRET, `${ENV.HOST_URI}/oauth2-callback`);
 
 export const authService = {
 
-    auth: async (chatId: any): Promise<string> => {
+    auth: async (chatId: any, lang: any): Promise<string> => {
         return OAUTH2_CLIENT.generateAuthUrl({
             access_type: "offline",
             prompt: 'consent',          //adds a request to the refresh token each time
@@ -20,22 +23,21 @@ export const authService = {
                 'https://www.googleapis.com/auth/classroom.announcements',
                 'https://www.googleapis.com/auth/classroom.rosters'
             ],
-            state: chatId,
+            state: encodeURIComponent(JSON.stringify({ chatId, lang })),
             redirect_uri: `${ENV.HOST_URI}/oauth2-callback`
         });
     },
 
     oauth2Callback: async (code: any, state: any): Promise<string> => {
         const { tokens } = await OAUTH2_CLIENT.getToken(code);
-        const chatId = state;
+        const { chatId, lang } = JSON.parse(decodeURIComponent(state));
+
         const refreshToken = tokens.refresh_token as string;
         await setRefreshTokenToUser(chatId, refreshToken);
-        await bot.telegram.sendMessage(chatId, 'Success authorisation', {
-            reply_markup: {
-                keyboard: [
-                    [{ text: '/menu' }]
-                ]
-            }
+        const res = await classroomHelperService.getMenuResponse(chatId, lang);
+
+        await bot.telegram.sendMessage(chatId, `${translationsHandler(translationKeys.CLASSROOM_HELPER_SUCCESS_AUTHORISATION_TEXT, lang)} ${res.text}`, {
+            reply_markup: res.keyboard.reply_markup
         });
 
         return `tg://resolve?domain=${ENV.BOT_USERNAME}`;

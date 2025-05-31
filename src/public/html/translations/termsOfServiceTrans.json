@@ -15,7 +15,7 @@
         "termination": "🔹 Termination:",
         "can_revoke_access": "We can revoke access if you violate terms.",
 
-        "contact_us": "📧 Contact us at:",
+        "contact_us": "📧 Contact us at: <strong>petsa.yurii@student.uzhnu.edu.ua</strong>",
         "back_homepage": "Back to Homepage"
     },
 
@@ -35,7 +35,7 @@
         "termination": "🔹 Припинення:",
         "can_revoke_access": "Ми можемо скасувати доступ, якщо ви порушите умови.",
 
-        "contact_us": "📧 Зв'яжіться з нами за адресою:",
+        "contact_us": "📧 Зв'яжіться з нами за адресою: <strong>petsa.yurii@student.uzhnu.edu.ua</strong>",
         "back_homepage": "Назад на головну сторінку"
     }
 }

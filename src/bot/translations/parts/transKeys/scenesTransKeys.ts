@@ -1,4 +1,4 @@
-import { addPrefixToKeysAndValues } from "../../../../botService";
+import { addPrefixToKeysAndValues } from "../../../botService";
 
 export const scenesTransKeys = addPrefixToKeysAndValues('scenes', {
     ENTER_TIME_TEXT: 'enterTimeText',

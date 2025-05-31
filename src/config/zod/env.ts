@@ -52,6 +52,11 @@ const envSchema = zod.object({
     GOOGLE_GEMINI_API_KEY: zod.string().refine(
         key => key.length === 39 && key.startsWith('AIzaSy'),
         'Invalid Google Gemini API key'
+    ),
+
+    LANGUAGE: zod.string().refine(
+        key => key.length > 1,
+        "An invalid language (the 'lang' key) has been defined in the '.env' file"
     )
 });
 

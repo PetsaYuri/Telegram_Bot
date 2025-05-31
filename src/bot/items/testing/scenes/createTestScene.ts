@@ -3,7 +3,7 @@ import { TestTypes } from "../enums/testTypes";
 import { ISceneContext } from "../../../types/ISceneContext";
 import { ModeTypes } from "../../../types/ModeTypes";
 import { translationsHandler } from "../../../../api/middleware/translationsHandler";
-import { translationKeys } from "../../../types/translations/TranslationsKeys";
+import { translationKeys } from "../../../translations/TranslationsKeys";
 import { exitButton, exitKeyboard, forceExit, getLang } from "../../../botService";
 
 interface ICreateTestState {

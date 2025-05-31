@@ -60,7 +60,7 @@ export const scenesTranslations = {
         enterTitleText: 'Введіть заголовок:',
         titleMustBeBetweenText: 'Помилка: заголовок має містити від 1 до 3000 символів, спробуйте ще раз',
 
-        enterDescText: 'Enter a description (optional)',
+        enterDescText: "Введіть опис (необов'язково)",
         descMustBeGreaterText: 'Помилка: опис має бути більшим за 30000 або відсутній (%s), спробуйте ще раз',
 
         enterMaxScoreText: "Введіть максимальний бал (введіть '0', якщо ви хочете залишити завдання без оцінки).",

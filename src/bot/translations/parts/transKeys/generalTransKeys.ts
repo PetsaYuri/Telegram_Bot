@@ -1,4 +1,4 @@
-import { addPrefixToKeysAndValues } from "../../../../botService";
+import { addPrefixToKeysAndValues } from "../../../botService";
 
 export const generalTransKeys = addPrefixToKeysAndValues('general', {
     MAIN_MENU_COMMAND: 'mainMenuCommand',
@@ -35,4 +35,30 @@ export const generalTransKeys = addPrefixToKeysAndValues('general', {
     VIEW_WELCOME_PAGE_TEXT: 'viewWelcomePageText',
     VIEW_PRIVACY_POLICY_TEXT: 'viewPrivacyPolicyText',
     VIEW_TERMS_OF_SERVICE_TEXT: 'viewTermsOfServiceText',
+
+    JANUARY_TEXT: 'januaryText',
+    FEBRUARY_TEXT: 'februaryText',
+    MARCH_TEXT: 'marchText',
+    APRIL_TEXT: 'aprilText',
+
+    MAY_TEXT: 'mayText',
+    JUNE_TEXT: 'juneText',
+    JULY_TEXT: 'julyText',
+    AUGUST_TEXT: 'augustText',
+
+    SEPTEMBER_TEXT: 'septemberText',
+    OCTOBER_TEXT: 'octoberText',
+    NOVEMBER_TEXT: 'novemberText',
+    DECEMBER_TEXT: 'decemberText',
+
+    SUNDAY_TEXT: 'SundayText',
+    MONDAY_TEXT: 'MondayText',
+    TUESDAY_TEXT: 'TuesdayText',
+    WEDNESDAY_TEXT: 'WednesdayText',
+    THURSDAY_TEXT: 'ThursdayText',
+    FRIDAY_TEXT: 'FridayText',
+    SATURDAY_TEXT: 'SaturdayText',
+
+    INVALID_MONTH_NUM_TEXT: 'invalidMonthNumText',
+    DAY_DOES_NOT_EXIST_TEXT: 'dayDoesNotExistText',
 })

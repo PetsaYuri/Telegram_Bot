@@ -38,7 +38,6 @@
             </ul>
 
             <p id="contact_us">
-                <strong>petsa.yurii@student.uzhnu.edu.ua</strong>
             </p>
             <a href="/" id="back_homepage"></a>
         </main>
@@ -47,8 +46,8 @@
             let translations = {};
 
             async function loadTranslations() {
-                translations = await (await fetch('./translations/privacyPolicyTrans.json')).json();
-                setLanguage('ua');
+                translations = await (await fetch('./translations/termsOfServiceTrans.json')).json();
+                setLanguage('en');
             }
 
             function setLanguage(lang) {

@@ -33,7 +33,33 @@ export const generalTranslations = {
 
         viewWelcomePageText: 'Choose your preferred method to view the welcome page for this application',
         viewPrivacyPolicyText: 'Choose your preferred method to view the Privacy Policy',
-        viewTermsOfServiceText: 'Choose your preferred method to view the terms of service'
+        viewTermsOfServiceText: 'Choose your preferred method to view the terms of service',
+
+        januaryText: 'January',
+        februaryText: 'February',
+        marchText: 'March',
+        aprilText: 'April',
+
+        mayText: 'May',
+        juneText: 'June',
+        julyText: 'July',
+        augustText: 'August',
+
+        septemberText: 'September',
+        octoberText: 'October',
+        novemberText: 'November',
+        decemberText: 'December',
+
+        SundayText: 'Sunday',
+        MondayText: 'Monday',
+        TuesdayText: 'Tuesday',
+        WednesdayText: 'Wednesday',
+        ThursdayText: 'Thursday',
+        FridayText: 'Friday',
+        SaturdayText: 'Saturday',
+
+        invalidMonthNumText: 'invalid month number',
+        dayDoesNotExistText: "the day with provided number doesn't exist",
     },
 
     ua: {
@@ -70,6 +96,32 @@ export const generalTranslations = {
 
         viewWelcomePageText: 'Виберіть бажаний спосіб перегляду сторінки привітання цієї програми',
         viewPrivacyPolicyText: 'Виберіть бажаний спосіб перегляду Політики конфіденційності',
-        viewTermsOfServiceText: 'Виберіть бажаний спосіб перегляду умов надання послуг'
+        viewTermsOfServiceText: 'Виберіть бажаний спосіб перегляду умов надання послуг',
+
+        januaryText: 'Січень',
+        februaryText: 'Лютий',
+        marchText: 'Березень',
+        aprilText: 'Квітень',
+
+        mayText: 'Травень',
+        juneText: 'Червень',
+        julyText: 'Липень',
+        augustText: 'Серпень',
+
+        septemberText: 'Вересень',
+        octoberText: 'Жовтень',
+        novemberText: 'Листопад',
+        decemberText: 'Грудень',
+
+        SundayText: 'Неділя',
+        MondayText: 'Понеділок',
+        TuesdayText: 'Вівторок',
+        WednesdayText: 'Середа',
+        ThursdayText: 'Четвер',
+        FridayText: "П'ятниця",
+        SaturdayText: 'Субота',
+
+        invalidMonthNumText: 'недійсний номер місяця',
+        dayDoesNotExistText: "День із вказаним номером не існує",
     }
 }

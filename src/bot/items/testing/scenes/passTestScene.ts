@@ -5,7 +5,7 @@ import { getTest } from "../testingService";
 import { ModeTypes } from "../../../types/ModeTypes";
 import { SceneSessionData } from "telegraf/typings/scenes";
 import { translationsHandler } from "../../../../api/middleware/translationsHandler";
-import { translationKeys } from "../../../types/translations/TranslationsKeys";
+import { translationKeys } from "../../../translations/TranslationsKeys";
 import { exitKeyboard, forceExit, getLang } from "../../../botService";
 
 interface IPassTestState {

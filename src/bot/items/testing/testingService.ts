@@ -12,7 +12,7 @@ import fs from 'fs'
 import { IMistake } from "./types/IMistake"
 import * as cheerio from "cheerio"
 import { translationsHandler } from "../../../api/middleware/translationsHandler"
-import { translationKeys } from "../../types/translations/TranslationsKeys"
+import { translationKeys } from "../../translations/TranslationsKeys"
 import { format, getLang } from "../../botService"
 import { SceneSessionData } from "telegraf/typings/scenes"
 
@@ -178,7 +178,8 @@ export const testingService = {
                         )}`
 
                 await ctx.reply(convertToMarkdownV2(text), {
-                    parse_mode: "MarkdownV2"
+                    parse_mode: "MarkdownV2",
+                    reply_markup: getBackToTestsKeyboard(ctx.session.__scenes).reply_markup
                 })
             }
 
@@ -447,4 +448,13 @@ export async function getTest(testId: string, chatId: number | undefined, scenes
     }
 
     return test;
+}
+
+function getBackToTestsKeyboard(scenes: SceneSessionData | undefined) {
+    const lang = getLang(scenes);
+    return Markup.keyboard([
+        [translationsHandler(translationKeys.TESTING_BACK_TO_TESTS_TEXT, lang)]
+    ])
+        .oneTime()
+        .resize();
 }

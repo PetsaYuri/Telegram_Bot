@@ -4,7 +4,7 @@ import { ModeTypes } from "../../../types/ModeTypes";
 import { getFormattedDate, getFormattedTime } from "../classroomHelperService";
 import { dueDateKeyboard, dueTimekeyboard, isPastDate, isPastDateAndTime, maxPointKeyboard, skipKeyboard } from "./createTaskScene";
 import { translationsHandler } from "../../../../api/middleware/translationsHandler";
-import { translationKeys } from "../../../types/translations/TranslationsKeys";
+import { translationKeys } from "../../../translations/TranslationsKeys";
 import { forceExit, format, getLang } from "../../../botService";
 import { SceneSessionData } from "telegraf/typings/scenes";
 

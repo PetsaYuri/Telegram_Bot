@@ -1,4 +1,4 @@
-import { addPrefixToKeysAndValues } from "../../../../botService";
+import { addPrefixToKeysAndValues } from "../../../botService";
 
 export const testingTransKeys = addPrefixToKeysAndValues('testing', {
     BACK_TO_TESTS_TEXT: 'backToTestsText',

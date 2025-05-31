@@ -2,7 +2,7 @@ import { Scenes } from "telegraf";
 import { testingService } from "./testingService";
 import { translationsHandler } from "../../../api/middleware/translationsHandler";
 import { getLang } from "../../botService";
-import { translationKeys } from "../../types/translations/TranslationsKeys";
+import { translationKeys } from "../../translations/TranslationsKeys";
 
 export const testingController = async (ctx: any) => {
     const text = ctx.text;

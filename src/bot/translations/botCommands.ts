@@ -1,7 +1,7 @@
 import { EnglishBotCommands } from "./botCommands/EnglishBotCommands";
 import { UkrainianBotCommands } from "./botCommands/UkrainianBotCommands";
 import { LangTypes } from "./LangTypes";
-import { bot } from "../../..";
+import { bot } from "../..";
 
 const botCommands: Record<LangTypes, { command: string; description: string }[]> = {
     en: EnglishBotCommands,

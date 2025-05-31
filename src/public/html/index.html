@@ -40,7 +40,7 @@
             <p><strong id="auth_perms"></strong></p>
             <ul class="container">
                 <li id="bot_uses_google_auth"></li>
-                <li id="any_questions"><strong>petsa.yurii@student.uzhnu.edu.ua</strong>
+                <li id="any_questions">
                 </li>
             </ul>
 
@@ -53,7 +53,7 @@
 
             async function loadTranslations() {
                 translations = await (await fetch('./translations/indexTrans.json')).json();
-                setLanguage('ua');
+                setLanguage('en');
             }
 
             function setLanguage(lang) {
@@ -61,7 +61,14 @@
                     const el = document.getElementById(id);
 
                     if (el) {
-                        el.textContent = translations[lang][id];
+                        const text = translations[lang][id];
+
+                        if (text.includes("<") && text.includes("</")) {
+                            el.innerHTML = text
+
+                        } else {
+                            el.textContent = text;
+                        }
                     }
                 });
 

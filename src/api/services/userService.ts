@@ -106,12 +106,20 @@ async function removeUserIfTokenStale(userId: string): Promise<void> {
         const daysBetweenDates = getDaysBetweenDates(new Date(), user.discoveredInvalidToken);
 
         if (daysBetweenDates >= retentionPeriod) {
-            const userCourses = await Course.find({ user });
-            userCourses.map(async course => await Course.findByIdAndDelete(course.id));
-            await User.findByIdAndDelete(userId);
+            await removeUserInfo(user.chatId);
         }
     }
+}
 
+export async function removeUserInfo(chatId: number | undefined) {
+    const user = await User.findOne({ chatId });
+    if (!user) {
+        return;
+    }
+
+    const userCourses = await Course.find({ user });
+    userCourses.map(async course => await Course.findByIdAndDelete(course.id));
+    await User.findByIdAndDelete(user._id);
 }
 
 function getDaysBetweenDates(currentDate: Date, prevDate: Date) {

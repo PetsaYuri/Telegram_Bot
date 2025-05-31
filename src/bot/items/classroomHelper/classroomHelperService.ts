@@ -1,5 +1,5 @@
 import { Markup } from "telegraf";
-import { InlineKeyboardMarkup, ReplyKeyboardMarkup } from "telegraf/typings/core/types/typegram";
+import { InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup } from "telegraf/typings/core/types/typegram";
 import { classroomService } from "./classroomService";
 import { IBotResponse } from "../../types/CustomBotResponse";
 import User from "../../../api/models/users";
@@ -17,36 +17,30 @@ import { ICreateNotifSession } from "./types/sessions/ICreateNotifSession";
 import { isPastDateAndTime } from "./scenes/createTaskScene";
 import { format, getLang } from "../../botService";
 import { translationsHandler } from "../../../api/middleware/translationsHandler";
-import { translationKeys } from "../../types/translations/TranslationsKeys";
+import { translationKeys } from "../../translations/TranslationsKeys";
 import { SceneSessionData } from "telegraf/typings/scenes";
+import { LangTypes } from "../../translations/LangTypes";
 
 export const classroomHelperService = {
 
-    getMenuResponse: async (chatId: number, scenes: SceneSessionData | undefined): Promise<IBotResponse> => {
-        const lang = getLang(scenes);
+    getMenuResponse: async (chatId: number, lang: LangTypes): Promise<IBotResponse> => {
         const user = await User.findOne({ chatId });
 
         if (!user) {
-            const keyboard = Markup.keyboard([
-                [translationsHandler(translationKeys.CLASSROOM_HELPER_AUTHORISATION_TEXT, lang)]
-            ]).resize();
-
-            return ({ text: translationsHandler(translationKeys.GENERAL_MAIN_MENU_TEXT, lang), keyboard });
+            const keyboard = getInlineKeyboardWithAuthorisation(lang, chatId);
+            return ({ text: translationsHandler(translationKeys.CLASSROOM_HELPER_AUTH_VIA_LINK_TEXT, lang), keyboard });
 
         } else {
             const keyboard = Markup.keyboard([
-                [translationsHandler(translationKeys.CLASSROOM_HELPER_MANAGE_COURSES_TEXT, lang)],
-                [translationsHandler(translationKeys.CLASSROOM_HELPER_VIEW_COURSES_TEXT, lang)]
+                [translationsHandler(translationKeys.CLASSROOM_HELPER_MANAGE_COURSES_TEXT, lang),
+                translationsHandler(translationKeys.CLASSROOM_HELPER_VIEW_COURSES_TEXT, lang)],
+
+                [translationsHandler(translationKeys.CLASSROOM_HELPER_SHOW_TASK_CALENDAR_TEXT, lang),
+                translationsHandler(translationKeys.CLASSROOM_HELPER_LOG_OUT_TEXT, lang)]
             ])
 
             return ({ text: translationsHandler(translationKeys.GENERAL_CHOOSE_NEXT_ACTION_TEXT, lang), keyboard });
         }
-    },
-
-    getAuthorisationResponse: (chatId: number, scenes: SceneSessionData | undefined): IBotResponse => {
-        const lang = getLang(scenes);
-        const keyboard = getInlineKeyboardWithAuthorisation(scenes, chatId);
-        return ({ text: translationsHandler(translationKeys.CLASSROOM_HELPER_AUTH_VIA_LINK_TEXT, lang), keyboard });
     },
 
     getCourseResponse: async (chatId: number | undefined, scenes: SceneSessionData | undefined, action: CourseActions): Promise<IBotResponse> => {
@@ -67,8 +61,20 @@ export const classroomHelperService = {
         }
     },
 
-    getAllMaterialsResponse: async (chatId: number | undefined, scenes: SceneSessionData | undefined, course: ICourseInfo,
+    getAllMaterialsResponse: async (chatId: number | undefined, scenes: SceneSessionData | undefined, courseName: string,
         withUserLastTimeRetrieved: boolean = true): Promise<IBotResponse | IBotResponse[]> => {
+
+        const lang = getLang(scenes);
+        const userCourses = await classroomService.getAllAvailableCourses(chatId, scenes);
+        let course;
+
+        if (userCourses.map(course => course.name).includes(courseName)) {
+            course = userCourses.find(course => course.name === courseName) as ICourseInfo;
+
+        } else {
+            throw new Error(format(translationsHandler(translationKeys.CLASSROOM_HELPER_DONT_HAVE_COURSE_TEXT, lang), courseName))
+        }
+
         const user = await User.findOne({ chatId });
         if (!await Course.exists({ courseId: course.id, user })) {
             const newCourse = new Course({ courseId: course.id, title: course.name, user });
@@ -79,7 +85,7 @@ export const classroomHelperService = {
         if (withUserLastTimeRetrieved) {
             let courseDb = await Course.findOne({ courseId: course.id, user }) as ICourse;
             materials = await classroomService.getAllMaterials(chatId, scenes, course.id, courseDb?.lastTimeRetrieved);
-            // await Course.findOneAndUpdate({ _id: courseDb.id }, { lastTimeRetrieved: new Date() });
+            await Course.findOneAndUpdate({ _id: courseDb.id }, { lastTimeRetrieved: new Date() });
         }
 
         else {
@@ -89,7 +95,6 @@ export const classroomHelperService = {
         let text;
         let keyboard;
         let arr: IBotResponse[] = [];
-        const lang = getLang(scenes);
 
         if (materials.length === 0) {
             text = translationsHandler(translationKeys.CLASSROOM_HELPER_HAVE_SEEN_ALL_MATER_TEXT, lang);
@@ -120,6 +125,17 @@ export const classroomHelperService = {
             if (courseId) {
                 const materials = await classroomService.getAllMaterials(chatId, scenes, courseId);
 
+                if (materials.length === 0) {
+                    const returnButtonText = getReturnButtonTextByAction(scenes, action);
+                    const keyboard = Markup.keyboard([
+                        [translationsHandler(translationKeys.CLASSROOM_HELPER_RETURN_TO_HELPER_MENU_TEXT, lang), returnButtonText]
+                    ])
+                        .resize()
+                        .oneTime();
+
+                    return ({ text: translationsHandler(translationKeys.CLASSROOM_HELPER_NO_MATERIALS_CREATED_TEXT, lang), keyboard })
+                }
+
                 if (course.ownerId === ownerId) {
                     let res = materials.map(material => {
 
@@ -145,7 +161,7 @@ export const classroomHelperService = {
                     return res;
 
                 } else {
-                    let response = await classroomHelperService.getAllMaterialsResponse(chatId, scenes, course);
+                    let response = await classroomHelperService.getAllMaterialsResponse(chatId, scenes, course.name);
                     return response;
                 }
             }
@@ -157,29 +173,47 @@ export const classroomHelperService = {
     getCreateTaskResponse: (scenes: SceneSessionData | undefined, courseName: string): IBotResponse => {
         const lang = getLang(scenes);
         const keyboard = Markup.keyboard([
-            ...getReplyKeyboardButton(format(translationsHandler(translationKeys.CLASSROOM_HELPER_CREATE_TASK_TEXT, lang), courseName))
-                .reply_markup.keyboard,
+            [format(translationsHandler(translationKeys.CLASSROOM_HELPER_CREATE_TASK_TEXT, lang), courseName),
+            translationsHandler(translationKeys.CLASSROOM_HELPER_RETURN_TO_CHOOSING_OWN_COURSE_TEXT, lang)],
 
-            ...getReplyKeyboardButton(translationsHandler(translationKeys.CLASSROOM_HELPER_MANAGE_COURSES_TEXT, lang))
-                .reply_markup.keyboard,
-        ]);
+            [translationsHandler(translationKeys.CLASSROOM_HELPER_RETURN_TO_HELPER_MENU_TEXT, lang)]
+
+        ])
+            .oneTime()
+            .resize();
 
         return ({ text: translationsHandler(translationKeys.CLASSROOM_HELPER_MATERIALS_FROM_COURSE_TEXT, lang), keyboard })
     },
 
+    getViewCourseResponse: (scenes: SceneSessionData | undefined, courseName: string): IBotResponse => {
+        const lang = getLang(scenes);
+        const keyboard = Markup.keyboard([
+            [translationsHandler(translationKeys.CLASSROOM_HELPER_RETURN_TO_CHOOSING_AVAIL_COURSE_TEXT, lang),
+            format(translationsHandler(translationKeys.CLASSROOM_HELPER_SHOW_TASK_CALENDAR_FOR_COURSE_TEXT, lang), courseName)]
+        ])
+            .oneTime()
+            .resize();
+
+        return ({ text: translationsHandler(translationKeys.CLASSROOM_HELPER_MATERIALS_FROM_COURSE_TEXT, lang), keyboard });
+    },
+
     createTask: (ctx: any, courseName: string): void => {
         const chatId = ctx.chat?.id as number;
-        const lang = getLang(ctx.session.__scenes);
+        const scenes = ctx.session.__scenes;
+        const lang = getLang(scenes);
 
         getTaskPropsFromUserForCreate(ctx).then(async res => {
             if (res.state.isForcedExit) {
-                const res = await classroomHelperService.getMenuResponse(chatId, ctx.session.__scenes);
+                const res = await classroomHelperService.getMenuResponse(chatId, scenes);
                 await ctx.reply(res.text, res.keyboard);
                 return;
             }
 
-            const taskProps = setTaskProps(ctx.session.__scenes, res.state);
-            const link = await classroomService.createTask(chatId, ctx.session.__scenes, courseName, taskProps);
+            const taskProps = setTaskProps(scenes, res.state);
+            const link = await classroomService.createTask(chatId, scenes, courseName, taskProps);
+
+            await sendNotifAboutChangesInCourse(chatId, scenes, courseName,
+                format(translationsHandler(translationKeys.CLASSROOM_HELPER_CREATED_TASK_NOTIF_TEXT, lang), taskProps.title, courseName));
 
             await ctx.reply(translationsHandler(translationKeys.CLASSROOM_HELPER_SUCCESS_CREATED_TEXT, lang),
                 getInlineKeyboardWithURI(translationsHandler(translationKeys.CLASSROOM_HELPER_VIEW_IN_BROWSER_TEXT, lang), link));
@@ -191,27 +225,31 @@ export const classroomHelperService = {
 
     editTask: async (ctx: any, courseId: string, taskId: string): Promise<void> => {
         const chatId = ctx.chat?.id as number;
-        const lang = getLang(ctx.session.__scenes);
+        const scenes = ctx.session.__scenes;
+        const lang = getLang(scenes);
 
-        const task = await classroomService.getTask(chatId, ctx.session.__scenes, courseId, taskId);
+        const task = await classroomService.getTask(chatId, scenes, courseId, taskId);
         if (!task) {
             throw new Error(translationsHandler(translationKeys.CLASSROOM_HELPER_CANNOT_EDIT_TASK_TEXT, lang));
         }
 
         getTaskPropsFromUserForEdit(ctx, task).then(async res => {
             if (res.state.isForcedExit) {
-                const res = await classroomHelperService.getMenuResponse(chatId, ctx.session.__scenes);
+                const res = await classroomHelperService.getMenuResponse(chatId, scenes);
                 await ctx.reply(res.text, res.keyboard);
                 return;
             }
 
-            const taskProps = setTaskProps(ctx.session.__scenes, res.state);
-            const link = await classroomService.editTask(chatId, ctx.session.__scenes, courseId, taskId, taskProps);
+            const taskProps = setTaskProps(scenes, res.state);
+            const link = await classroomService.editTask(chatId, scenes, courseId, taskId, taskProps);
+            const courseName = await classroomService.getCourseNameById(chatId, scenes, courseId) as string;
+
+            await sendNotifAboutChangesInCourse(chatId, scenes, courseName,
+                format(translationsHandler(translationKeys.CLASSROOM_HELPER_UPDATED_TASK_NOTIF_TEXT, lang), taskProps.title, courseName));
 
             await ctx.reply(translationsHandler(translationKeys.CLASSROOM_HELPER_SUCCESS_UPDATED_TEXT, lang),
                 getInlineKeyboardWithURI(translationsHandler(translationKeys.CLASSROOM_HELPER_VIEW_IN_BROWSER_TEXT, lang), link));
 
-            const courseName = await classroomService.getCourseNameById(chatId, ctx.session.__scenes, courseId);
             await ctx.reply(translationsHandler(translationKeys.GENERAL_CHOOSE_NEXT_ACTION_TEXT, lang),
                 getReplyKeyboardButton(format(translationsHandler(translationKeys.CLASSROOM_HELPER_MANAGE_COURSE_TEXT, lang), courseName)));
         });
@@ -249,17 +287,224 @@ export const classroomHelperService = {
                 courseWork.title, convertMsToDateStr(ctx.session.__scenes, differenceTime - time)));
         })
     },
+
+    getTaskCalendarResponse: async (ctx: any, courseName?: string): Promise<IBotResponse> => {
+        const scenes = ctx.session.__scenes;
+        const lang = getLang(scenes);
+
+        const chatId = ctx.chat?.id as number;
+        let tasks: IMaterial[] = [];
+
+        if (courseName) {
+            const courseId = await classroomService.getCourseIdByName(chatId, scenes, courseName) as string;
+            tasks = await classroomService.getAllMaterials(chatId, scenes, courseId);
+
+        } else {
+            tasks = await classroomService.getAllMaterialsWithActualDueDate(chatId, scenes);
+        }
+
+        const currentDate = new Date();
+        const currentMonthText = getMonthText(scenes, currentDate.getMonth());
+        const currentMonth = currentDate.getMonth() + 1;
+
+        const endOfWeekDay = currentDate.getDate() + (15 - currentDate.getDay());
+        const endOfWeekDate = getValidDate(endOfWeekDay, currentMonth);
+
+        let content = '';
+        let isUpcomingTasks = false;
+
+        if (tasks && tasks.length > 0) {
+            let index = 1;
+
+            const filteredTasks = tasks
+                .filter((task) => task.dueDate)
+                .sort((task, nextTask) => convertToDate(task.dueDate!, task.dueTime!).getTime() - convertToDate(nextTask.dueDate!, nextTask.dueTime!).getTime());
+
+            for (const task of filteredTasks) {
+                const courseName = await classroomService.getCourseNameById(chatId, scenes, task.courseId);
+
+                if (!task.dueTime) {
+                    task.dueTime = { hours: 0, minutes: 0 };
+                }
+
+                const taskDateTime = convertToDate(task.dueDate!, task.dueTime);
+
+                if (currentDate.getTime() < taskDateTime.getTime() && taskDateTime.getTime() < endOfWeekDate.getTime()) {
+                    const dayWithDateText = getDayOfWeekText(scenes, taskDateTime.getDay()) + ` (${taskDateTime.getDate() + ' ' + getMonthText(scenes, taskDateTime.getMonth())})\n`;
+                    const taskDueTimeHours = task.dueTime.hours! + 3;
+
+                    if (content.includes(dayWithDateText)) {
+                        content += (taskDueTimeHours === 24 ? '00' : taskDueTimeHours) + ':' + (task.dueTime.minutes ?? '00') + ' - ' + task.title +
+                            translationsHandler(translationKeys.CLASSROOM_HELPER_TASK_AND_BRACKET_TEXT, lang) + ` '${courseName}' ` +
+                            translationsHandler(translationKeys.CLASSROOM_HELPER_COURSE_AND_BRACKET_TEXT, lang) + '\n';
+
+                    } else {
+                        const taskDueTimeHours = task.dueTime.hours! + 3;
+
+                        content += '\n' + index + '. ' + dayWithDateText +
+                            (taskDueTimeHours === 24 ? '00' : taskDueTimeHours) + ':' + (task.dueTime.minutes ?? '00') + ' - ' + task.title +
+                            translationsHandler(translationKeys.CLASSROOM_HELPER_TASK_AND_BRACKET_TEXT, lang) + ` '${courseName}' ` +
+                            translationsHandler(translationKeys.CLASSROOM_HELPER_COURSE_AND_BRACKET_TEXT, lang) + '\n';
+                        index++;
+                    }
+
+                } else if (taskDateTime.getTime() > endOfWeekDate.getTime()) {
+                    isUpcomingTasks = true;
+                }
+            };
+        }
+
+        let text = '';
+        const periodText = `(${currentMonthText} ${currentDate.getDate()} - ` + `${getMonthText(scenes, endOfWeekDate.getMonth())} ${endOfWeekDate.getDate()})`;
+
+        if (content === '') {
+            text = translationsHandler(translationKeys.CLASSROOM_HELPER_NO_TASKS_TO_COMPLETE_TEXT, lang) + ' ' + periodText;
+
+        } else {
+            text = translationsHandler(translationKeys.CLASSROOM_HELPER_TASKS_TO_COMPLETE_TEXT, lang) + ` ${periodText}:`;
+        }
+
+        if (isUpcomingTasks) {
+            content += '\n' + translationsHandler(translationKeys.CLASSROOM_HELPER_PRESS_TO_VIEW_UP_TASKS_TEXT, lang);
+        }
+
+        let keyboard: Markup.Markup<InlineKeyboardMarkup> = Markup.inlineKeyboard([[]]);
+        if (isUpcomingTasks) {
+            let callbackData = `class_calendar_upcoming ${endOfWeekDate.getDate()}.${endOfWeekDate.getMonth()}.${endOfWeekDate.getFullYear()}`;
+
+            if (courseName) {
+                const courseId = await classroomService.getCourseIdByName(chatId, scenes, courseName);
+                callbackData += `, courseId=${courseId}`;
+            }
+
+            keyboard = Markup.inlineKeyboard([
+                [{
+                    text: translationsHandler(translationKeys.CLASSROOM_HELPER_SHOW_UP_TASKS_TEXT, lang),
+                    callback_data: callbackData
+                }]
+            ]);
+        }
+
+        return ({ text: text + content, keyboard });
+    },
+
+    getTaskCalendarWithUpTasksResponse: async (ctx: any, dateStr: string, courseId?: string): Promise<IBotResponse> => {
+        const scenes = ctx.session.__scenes;
+        const lang = getLang(scenes);
+
+        const splitedDate = dateStr.split('.');
+        const upcomingDate = new Date(`${splitedDate[2]}.${Number.parseInt(splitedDate[1]) - 1}.${splitedDate[0]}`);
+
+        const chatId = ctx.chat?.id as number;
+        const tasks = await classroomService.getAllMaterialsWithActualDueDate(chatId, scenes, upcomingDate, courseId);
+
+        let content = '';
+
+        if (tasks && tasks.length > 0) {
+            let index = 1;
+
+            const filteredTasks = tasks
+                .filter((task) => task.dueDate)
+                .sort((task, nextTask) => convertToDate(task.dueDate!, task.dueTime!).getTime() - convertToDate(nextTask.dueDate!, nextTask.dueTime!).getTime());
+
+            for (const task of filteredTasks) {
+                const courseName = await classroomService.getCourseNameById(chatId, scenes, task.courseId);
+
+                if (!task.dueTime) {
+                    task.dueTime = { hours: 0, minutes: 0 };
+                }
+
+                const taskDateTime = convertToDate(task.dueDate!, task.dueTime);
+                const dayWithDateText = getDayOfWeekText(scenes, taskDateTime.getDay()) + ` (${taskDateTime.getDate() + ' ' + getMonthText(scenes, taskDateTime.getMonth())})\n`;
+
+                if (content.includes(dayWithDateText)) {
+                    content += (task.dueTime.hours! + 3) + ':' + (task.dueTime.minutes ?? '00') + ' - ' + task.title +
+                        translationsHandler(translationKeys.CLASSROOM_HELPER_TASK_AND_BRACKET_TEXT, lang) + ` '${courseName}' ` +
+                        translationsHandler(translationKeys.CLASSROOM_HELPER_COURSE_AND_BRACKET_TEXT, lang) + '\n';
+
+                } else {
+                    content += '\n' + index + '. ' + dayWithDateText +
+                        (task.dueTime.hours! + 3) + ':' + (task.dueTime.minutes ?? '00') + ' - ' + task.title +
+                        translationsHandler(translationKeys.CLASSROOM_HELPER_TASK_AND_BRACKET_TEXT, lang) + ` '${courseName}' ` +
+                        translationsHandler(translationKeys.CLASSROOM_HELPER_COURSE_AND_BRACKET_TEXT, lang) + '\n';
+                    index++;
+                }
+            };
+        }
+
+        const text = translationsHandler(translationKeys.CLASSROOM_HELPER_UP_TASKS_TEXT, lang) + content;
+        return ({ text, keyboard: Markup.inlineKeyboard([[]]) });
+    },
+
+    openMaterialsResponse: async (ctx: any, courseId: string, materialId: string) => {
+        const chatId = ctx.chat?.id;
+        const lang = getLang(ctx.session.__scenes);
+        const material = await classroomService.getMaterial(chatId, ctx.session.__scenes, courseId, materialId);
+
+        if (material.materials) {
+            for (const mater of material.materials) {
+
+                let keyboard;
+                if (mater.driveFile?.driveFile?.alternateLink) {
+                    keyboard = Markup.inlineKeyboard([
+                        [{
+                            text: translationsHandler(translationKeys.GENERAL_VIEW_THROUGH_WEB_APP_TEXT, lang),
+                            web_app: { url: mater.driveFile?.driveFile?.alternateLink }
+                        }],
+
+                        [{
+                            text: translationsHandler(translationKeys.GENERAL_LINK_TEXT, lang),
+                            url: mater.driveFile?.driveFile?.alternateLink + ''
+                        }]
+                    ]);
+                }
+
+                if (mater.driveFile?.driveFile?.thumbnailUrl) {
+                    await ctx.replyWithPhoto(mater.driveFile.driveFile.thumbnailUrl, {
+                        reply_markup: keyboard?.reply_markup,
+                        caption: `${translationsHandler(translationKeys.CLASSROOM_HELPER_PREVIEW_OF_TEXT, lang)} ${mater.driveFile?.driveFile?.title}`
+                    })
+                }
+            }
+        }
+    },
+
+    getLogOutResponse: (scenes: SceneSessionData | undefined): IBotResponse => {
+        const lang = getLang(scenes);
+        const keyboard = Markup.keyboard([
+            [translationsHandler(translationKeys.GENERAL_MAIN_MENU_TEXT, lang)]
+        ]);
+
+        return ({ text: translationsHandler(translationKeys.CLASSROOM_HELPER_SUCCESSFULLY_LOGED_OUT_TEXT, lang), keyboard });
+    }
 }
 
 function collectMaterialsInResponse(scenes: SceneSessionData | undefined, materials: Array<IMaterial>): IBotResponse[] {
     const lang = getLang(scenes);
     return materials.map(material => {
 
-        let text = material.title + '\n' + material.description + '\n' +
-            translationsHandler(translationKeys.CLASSROOM_HELPER_CREATED_TEXT, lang) + ': ' + material.creationTime;
+        const creationDateTime = new Date(material.creationTime);
+        const creationDateText = creationDateTime.getDate() < 10 ? '0' + creationDateTime.getDate() : creationDateTime.getDate();
+        const creationMonthText = creationDateTime.getMonth() < 10 ? '0' + creationDateTime.getMonth() : creationDateTime.getMonth();
 
-        let keyboard = getInlineKeyboardWithURI(translationsHandler(
-            translationKeys.CLASSROOM_HELPER_OPEN_IN_BROWSER_TEXT, lang), material.link);
+        let text = material.title + '\n' + material.description + '\n' +
+            translationsHandler(translationKeys.CLASSROOM_HELPER_CREATED_TEXT, lang) + ': '
+            + `${creationDateText}.${creationMonthText}.${creationDateTime.getFullYear()}` +
+            ` | ${creationDateTime.getHours() ?? '00'}:${creationDateTime.getMinutes() ?? '00'}`;
+
+        let keyboard;
+
+        if (material.materials) {
+            keyboard = Markup.inlineKeyboard([
+                [{
+                    text: translationsHandler(translationKeys.CLASSROOM_HELPER_OPEN_MATERIALS_TEXT, lang),
+                    callback_data: `open_materials courseId=${material.courseId} materialId=${material.id}`
+                }]
+            ]);
+        }
+
+        keyboard = getInlineKeyboardWithURI(translationsHandler(
+            translationKeys.CLASSROOM_HELPER_OPEN_IN_BROWSER_TEXT, lang), material.link, keyboard);
 
         if (material.dueDate) {
             const formattedDate = getFormattedDate(material.dueDate)!;
@@ -303,10 +548,9 @@ function getBotResponseWithManageCourses(courses: ICourseInfo[], scenes: SceneSe
     return ({ text: translationsHandler(translationKeys.GENERAL_CHOOSE_NEXT_ACTION_TEXT, lang), keyboard })
 }
 
-export function getInlineKeyboardWithAuthorisation(scenes: SceneSessionData | undefined, chatId: number): Markup.Markup<InlineKeyboardMarkup> {
-    const lang = getLang(scenes)
+export function getInlineKeyboardWithAuthorisation(lang: LangTypes, chatId: number): Markup.Markup<InlineKeyboardMarkup> {
     return Markup.inlineKeyboard([
-        [Markup.button.url(translationsHandler(translationKeys.CLASSROOM_HELPER_LOGIN_TEXT, lang), `${ENV.HOST_URI}/auth?chat_id=${chatId}`)]
+        [Markup.button.url(translationsHandler(translationKeys.CLASSROOM_HELPER_LOGIN_TEXT, lang), `${ENV.HOST_URI}/auth?chat_id=${chatId}&lang=${lang}`)]
     ]);
 }
 
@@ -503,19 +747,125 @@ function setTaskProps(scenes: SceneSessionData | undefined, state: {
     return taskProps;
 }
 
-export function getInlineKeyboardWithURI(text: string, uri: string): Markup.Markup<InlineKeyboardMarkup> {
-    return Markup.inlineKeyboard([
-        [Markup.button.url(text, uri)]
-    ]);
+export function getInlineKeyboardWithURI(text: string, uri: string, keyboard?: Markup.Markup<InlineKeyboardMarkup>): Markup.Markup<InlineKeyboardMarkup> {
+    let buttons: InlineKeyboardButton[][] = [];
+
+    if (keyboard) {
+        buttons = keyboard.reply_markup.inline_keyboard;
+    }
+
+    buttons.push([Markup.button.url(text, uri)])
+    return Markup.inlineKeyboard(buttons);
 }
 
 async function getCourseByAction(chatId: number | undefined, scenes: SceneSessionData | undefined, action: CourseActions): Promise<ICourseInfo[]> {
-
     switch (action) {
         case CourseActions.VIEW:
             return await classroomService.getAllAvailableCourses(chatId, scenes);
 
         case CourseActions.MANAGE:
             return await classroomService.getAllOwnCourses(chatId, scenes);
+    }
+}
+
+async function sendNotifAboutChangesInCourse(chatId: number, scenes: SceneSessionData | undefined, courseName: string, notifText: string) {
+    const courseId = await classroomService.getCourseIdByName(chatId, scenes, courseName);
+    const courses = await Course.find({ courseId });
+
+    if (courses) {
+        courses.forEach(async (course) => {
+            const user = await User.findOne({ _id: course.user });
+
+            if (user && course.title === courseName) {
+                bot.telegram.sendMessage(user.chatId, notifText);
+            }
+        });
+    }
+}
+
+export function getMonthText(scenes: SceneSessionData | undefined, month: number) {
+    const lang = getLang(scenes);
+
+    switch (month) {
+        case 0:
+            return translationsHandler(translationKeys.GENERAL_JANUARY_TEXT, lang);
+
+        case 1:
+            return translationsHandler(translationKeys.GENERAL_FEBRUARY_TEXT, lang);
+
+        case 2:
+            return translationsHandler(translationKeys.GENERAL_MARCH_TEXT, lang);
+
+        case 3:
+            return translationsHandler(translationKeys.GENERAL_APRIL_TEXT, lang);
+
+        case 4:
+            return translationsHandler(translationKeys.GENERAL_MAY_TEXT, lang);
+
+        case 5:
+            return translationsHandler(translationKeys.GENERAL_JUNE_TEXT, lang);
+
+        case 6:
+            return translationsHandler(translationKeys.GENERAL_JULY_TEXT, lang);
+
+        case 7:
+            return translationsHandler(translationKeys.GENERAL_AUGUST_TEXT, lang);
+
+        case 8:
+            return translationsHandler(translationKeys.GENERAL_SEPTEMBER_TEXT, lang);
+
+        case 9:
+            return translationsHandler(translationKeys.GENERAL_OCTOBER_TEXT, lang);
+
+        case 10:
+            return translationsHandler(translationKeys.GENERAL_NOVEMBER_TEXT, lang);
+
+        case 11:
+            return translationsHandler(translationKeys.GENERAL_DECEMBER_TEXT, lang);
+
+        default:
+            throw new Error(translationsHandler(translationKeys.SCENES_ERROR_TEXT, lang) + translationsHandler(translationKeys.GENERAL_INVALID_MONTH_NUM_TEXT, lang));
+    }
+}
+
+function getValidDate(day: number, month: number): Date {
+    const year = new Date().getFullYear();
+    const maxDaysInMonth = new Date(year, month, 0).getDate();
+
+    if (day > maxDaysInMonth) {
+        return new Date(`${year}.${month + 1}.${day - maxDaysInMonth}`);
+    }
+
+    return new Date(`${year}.${month}.${day}`);
+}
+
+function getDayOfWeekText(scenes: SceneSessionData | undefined, day: number) {
+    const lang = getLang(scenes);
+    const days = [translationsHandler(translationKeys.GENERAL_SUNDAY_TEXT, lang), translationsHandler(translationKeys.GENERAL_MONDAY_TEXT, lang),
+    translationsHandler(translationKeys.GENERAL_TUESDAY_TEXT, lang), translationsHandler(translationKeys.GENERAL_WEDNESDAY_TEXT, lang),
+    translationsHandler(translationKeys.GENERAL_THURSDAY_TEXT, lang), translationsHandler(translationKeys.GENERAL_FRIDAY_TEXT, lang),
+    translationsHandler(translationKeys.GENERAL_SATURDAY_TEXT, lang)];
+
+    if (day > days.length) {
+        throw new Error(translationsHandler(translationKeys.SCENES_ERROR_TEXT, lang) + translationsHandler(translationKeys.GENERAL_DAY_DOES_NOT_EXIST_TEXT, lang));
+    }
+
+    return days[day];
+}
+
+function convertToDate(dueDate: classroom_v1.Schema$Date, dueTime: classroom_v1.Schema$TimeOfDay): Date {
+    return new Date(
+        Date.UTC(dueDate.year!, dueDate.month! - 1, dueDate.day!, dueTime.hours!, dueTime.minutes ?? 0));
+}
+
+function getReturnButtonTextByAction(scenes: SceneSessionData | undefined, action: CourseActions) {
+    const lang = getLang(scenes);
+
+    switch (action) {
+        case CourseActions.VIEW:
+            return translationsHandler(translationKeys.CLASSROOM_HELPER_RETURN_TO_CHOOSING_AVAIL_COURSE_TEXT, lang);
+
+        case CourseActions.MANAGE:
+            return translationsHandler(translationKeys.CLASSROOM_HELPER_RETURN_TO_CHOOSING_OWN_COURSE_TEXT, lang);
     }
 }
