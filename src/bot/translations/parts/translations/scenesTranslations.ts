@@ -1,6 +1,6 @@
 export const scenesTranslations = {
     en: {
-        enterTimeText: 'Enter a time (before which you want to receive the notification) in the next format:',
+        enterTimeText: 'Enter a time (before which you want to receive the notification) in the next format: ',
         leftText: 'left:',
 
         timeCannotBeEmptyText: 'Error: the time cannot be empty, please try again',
@@ -44,10 +44,18 @@ export const scenesTranslations = {
         enterNumOfQuestsText: 'Enter the number of questions you wish to pass:',
         mustEnterNumberText: 'You must enter a number, please try again',
         enteredNumBiggerText: 'The entered number of question is bigger then the questions size',
+
+        oneDayText: '1d',
+        letterDText: 'd',
+
+        oneHourText: '1h',
+        oneMinuteText: '1m',
+
+        exitCommand: '/exit'
     },
 
     ua: {
-        enterTimeText: 'Введіть час (до якого ви хочете отримати сповіщення) у наступному форматі:',
+        enterTimeText: 'Введіть час (до якого ви хочете отримати сповіщення) у наступному форматі: ',
         leftText: 'залишилось:',
 
         timeCannotBeEmptyText: 'Помилка: поле часу не може бути порожнім, спробуйте ще раз.',
@@ -91,5 +99,13 @@ export const scenesTranslations = {
         enterNumOfQuestsText: 'Введіть кількість питань, на які ви хочете відповісти:',
         mustEnterNumberText: 'Ви повинні ввести число, спробуйте ще раз',
         enteredNumBiggerText: 'Введене число, як кількість питань, більше за загальний розмір питань',
+
+        oneDayText: '1д',
+        letterDText: 'д',
+
+        oneHourText: '1г',
+        oneMinuteText: '1хв',
+
+        exitCommand: '/вихід'
     }
 }

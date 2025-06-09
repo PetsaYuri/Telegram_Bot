@@ -62,7 +62,7 @@ export const classroomHelperService = {
     },
 
     getAllMaterialsResponse: async (chatId: number | undefined, scenes: SceneSessionData | undefined, courseName: string,
-        withUserLastTimeRetrieved: boolean = true): Promise<IBotResponse | IBotResponse[]> => {
+        withUserLastTimeRetrieved: boolean = true): Promise<IBotResponse[]> => {
 
         const lang = getLang(scenes);
         const userCourses = await classroomService.getAllAvailableCourses(chatId, scenes);
@@ -108,7 +108,11 @@ export const classroomHelperService = {
             arr = collectMaterialsInResponse(scenes, materials);
         };
 
-        return arr.length === 0 ? ({ text: text as string, keyboard: keyboard as Markup.Markup<ReplyKeyboardMarkup> }) : arr;
+        if (arr.length === 0) {
+            arr.push({ text: text as string, keyboard: keyboard as Markup.Markup<ReplyKeyboardMarkup> })
+        }
+
+        return arr;
     },
 
     getMaterialsFromCourse: async (chatId: number | undefined, scenes: SceneSessionData | undefined, courseName: string,
@@ -138,10 +142,11 @@ export const classroomHelperService = {
 
                 if (course.ownerId === ownerId) {
                     let res = materials.map(material => {
+                        const creationTimeText = getCreationTimeFormattedInText(material.creationTime)
 
                         return ({
                             text: material.title + '\n' + material.description + '\n' +
-                                translationsHandler(translationKeys.CLASSROOM_HELPER_CREATED_TEXT, lang) + ': ' + material.creationTime,
+                                translationsHandler(translationKeys.CLASSROOM_HELPER_CREATED_TEXT, lang) + ': ' + creationTimeText,
 
                             keyboard: Markup.inlineKeyboard([
                                 [Markup.button.url(translationsHandler(translationKeys.CLASSROOM_HELPER_OPEN_IN_BROWSER_TEXT, lang), material.link)],
@@ -218,8 +223,8 @@ export const classroomHelperService = {
             await ctx.reply(translationsHandler(translationKeys.CLASSROOM_HELPER_SUCCESS_CREATED_TEXT, lang),
                 getInlineKeyboardWithURI(translationsHandler(translationKeys.CLASSROOM_HELPER_VIEW_IN_BROWSER_TEXT, lang), link));
 
-            await ctx.reply(translationsHandler(translationKeys.GENERAL_CHOOSE_NEXT_ACTION_TEXT, lang), getReplyKeyboardButton(format(
-                translationsHandler(translationKeys.CLASSROOM_HELPER_MANAGE_COURSE_TEXT, lang), courseName)));
+            const keyboard = getReturnKeyboard(lang, courseName);
+            await ctx.reply(translationsHandler(translationKeys.GENERAL_CHOOSE_NEXT_ACTION_TEXT, lang), keyboard);
         });
     },
 
@@ -250,8 +255,9 @@ export const classroomHelperService = {
             await ctx.reply(translationsHandler(translationKeys.CLASSROOM_HELPER_SUCCESS_UPDATED_TEXT, lang),
                 getInlineKeyboardWithURI(translationsHandler(translationKeys.CLASSROOM_HELPER_VIEW_IN_BROWSER_TEXT, lang), link));
 
+            const keyboard = getReturnKeyboard(lang, courseName);
             await ctx.reply(translationsHandler(translationKeys.GENERAL_CHOOSE_NEXT_ACTION_TEXT, lang),
-                getReplyKeyboardButton(format(translationsHandler(translationKeys.CLASSROOM_HELPER_MANAGE_COURSE_TEXT, lang), courseName)));
+                getReplyKeyboardButton(format(translationsHandler(translationKeys.CLASSROOM_HELPER_MANAGE_COURSE_TEXT, lang), courseName)), keyboard);
         });
     },
 
@@ -279,12 +285,13 @@ export const classroomHelperService = {
             const message = format(translationsHandler(translationKeys.CLASSROOM_HELPER_NOTIF_MESSAGE_TEXT, lang),
                 convertMsToDateStr(ctx.session.__scenes, time), courseWork.title, courseName);
 
-            setInterval(() => {
+            setTimeout(() => {
                 bot.telegram.sendMessage(chatId, message);
             }, differenceTime - time - 60000)
 
+            const keyboard = getReturnKeyboard(lang, courseName!);
             await ctx.reply(format(translationsHandler(translationKeys.CLASSROOM_HELPER_NOTIF_SET_UP_TEXT, lang),
-                courseWork.title, convertMsToDateStr(ctx.session.__scenes, differenceTime - time)));
+                courseWork.title, convertMsToDateStr(ctx.session.__scenes, differenceTime - time)), keyboard);
         })
     },
 
@@ -334,7 +341,7 @@ export const classroomHelperService = {
                     const taskDueTimeHours = task.dueTime.hours! + 3;
 
                     if (content.includes(dayWithDateText)) {
-                        content += (taskDueTimeHours === 24 ? '00' : taskDueTimeHours) + ':' + (task.dueTime.minutes ?? '00') + ' - ' + task.title +
+                        content += (taskDueTimeHours === 24 ? '00' : taskDueTimeHours) + ':' + (task.dueTime.minutes ?? '00') + ' - ' + task.title + ' ' +
                             translationsHandler(translationKeys.CLASSROOM_HELPER_TASK_AND_BRACKET_TEXT, lang) + ` '${courseName}' ` +
                             translationsHandler(translationKeys.CLASSROOM_HELPER_COURSE_AND_BRACKET_TEXT, lang) + '\n';
 
@@ -342,7 +349,7 @@ export const classroomHelperService = {
                         const taskDueTimeHours = task.dueTime.hours! + 3;
 
                         content += '\n' + index + '. ' + dayWithDateText +
-                            (taskDueTimeHours === 24 ? '00' : taskDueTimeHours) + ':' + (task.dueTime.minutes ?? '00') + ' - ' + task.title +
+                            (taskDueTimeHours === 24 ? '00' : taskDueTimeHours) + ':' + (task.dueTime.minutes ?? '00') + ' - ' + task.title + ' ' +
                             translationsHandler(translationKeys.CLASSROOM_HELPER_TASK_AND_BRACKET_TEXT, lang) + ` '${courseName}' ` +
                             translationsHandler(translationKeys.CLASSROOM_HELPER_COURSE_AND_BRACKET_TEXT, lang) + '\n';
                         index++;
@@ -416,15 +423,16 @@ export const classroomHelperService = {
 
                 const taskDateTime = convertToDate(task.dueDate!, task.dueTime);
                 const dayWithDateText = getDayOfWeekText(scenes, taskDateTime.getDay()) + ` (${taskDateTime.getDate() + ' ' + getMonthText(scenes, taskDateTime.getMonth())})\n`;
+                const taskDueTimeHours = task.dueTime.hours! + 3;
 
                 if (content.includes(dayWithDateText)) {
-                    content += (task.dueTime.hours! + 3) + ':' + (task.dueTime.minutes ?? '00') + ' - ' + task.title +
+                    content += (taskDueTimeHours === 24 ? '00' : taskDueTimeHours) + ':' + (task.dueTime.minutes ?? '00') + ' - ' + task.title + ' ' +
                         translationsHandler(translationKeys.CLASSROOM_HELPER_TASK_AND_BRACKET_TEXT, lang) + ` '${courseName}' ` +
                         translationsHandler(translationKeys.CLASSROOM_HELPER_COURSE_AND_BRACKET_TEXT, lang) + '\n';
 
                 } else {
                     content += '\n' + index + '. ' + dayWithDateText +
-                        (task.dueTime.hours! + 3) + ':' + (task.dueTime.minutes ?? '00') + ' - ' + task.title +
+                        (taskDueTimeHours === 24 ? '00' : taskDueTimeHours) + ':' + (task.dueTime.minutes ?? '00') + ' - ' + task.title + ' ' +
                         translationsHandler(translationKeys.CLASSROOM_HELPER_TASK_AND_BRACKET_TEXT, lang) + ` '${courseName}' ` +
                         translationsHandler(translationKeys.CLASSROOM_HELPER_COURSE_AND_BRACKET_TEXT, lang) + '\n';
                     index++;
@@ -473,7 +481,9 @@ export const classroomHelperService = {
         const lang = getLang(scenes);
         const keyboard = Markup.keyboard([
             [translationsHandler(translationKeys.GENERAL_MAIN_MENU_TEXT, lang)]
-        ]);
+        ])
+            .resize()
+            .oneTime();
 
         return ({ text: translationsHandler(translationKeys.CLASSROOM_HELPER_SUCCESSFULLY_LOGED_OUT_TEXT, lang), keyboard });
     }
@@ -483,14 +493,8 @@ function collectMaterialsInResponse(scenes: SceneSessionData | undefined, materi
     const lang = getLang(scenes);
     return materials.map(material => {
 
-        const creationDateTime = new Date(material.creationTime);
-        const creationDateText = creationDateTime.getDate() < 10 ? '0' + creationDateTime.getDate() : creationDateTime.getDate();
-        const creationMonthText = creationDateTime.getMonth() < 10 ? '0' + creationDateTime.getMonth() : creationDateTime.getMonth();
-
-        let text = material.title + '\n' + material.description + '\n' +
-            translationsHandler(translationKeys.CLASSROOM_HELPER_CREATED_TEXT, lang) + ': '
-            + `${creationDateText}.${creationMonthText}.${creationDateTime.getFullYear()}` +
-            ` | ${creationDateTime.getHours() ?? '00'}:${creationDateTime.getMinutes() ?? '00'}`;
+        const creationTimeText = getCreationTimeFormattedInText(material.creationTime);
+        let text = material.title + '\n' + material.description + '\n' + translationsHandler(translationKeys.CLASSROOM_HELPER_CREATED_TEXT, lang) + ': ' + creationTimeText;
 
         let keyboard;
 
@@ -712,28 +716,33 @@ function setTaskProps(scenes: SceneSessionData | undefined, state: {
     }
 
     if (dueDate && dueDate !== '-') {
-        const splitedDate = dueDate.split('.', 3);
-        Object.assign(taskProps, {
-            dueDate: {
-                year: splitedDate[2],
-                month: splitedDate[1],
-                day: splitedDate[0]
-            },
-            dueTime: {
-                hours: 23,
-                minutes: 59
-            }
-        });
+        console.log('dueDate =', typeof dueDate);
+        if (typeof dueDate === 'string') {
+            const splitedDate = dueDate.split('.', 3);
+            Object.assign(taskProps, {
+                dueDate: {
+                    year: splitedDate[2],
+                    month: splitedDate[1],
+                    day: splitedDate[0]
+                },
+                dueTime: {
+                    hours: 23,
+                    minutes: 59
+                }
+            });
+        }
     }
 
     if (dueTime && dueTime !== '-' && dueDate) {
-        const splitedTime = dueTime.split(':', 2);
-        Object.assign(taskProps, {
-            dueTime: {
-                hours: Number.parseInt(splitedTime[0]) - 3,
-                minutes: splitedTime[1]
-            }
-        });
+        if (typeof dueTime === 'string') {
+            const splitedTime = dueTime.split(':', 2);
+            Object.assign(taskProps, {
+                dueTime: {
+                    hours: Number.parseInt(splitedTime[0]) - 3,
+                    minutes: splitedTime[1]
+                }
+            });
+        }
     }
 
     if (maxPoints) {
@@ -868,4 +877,25 @@ function getReturnButtonTextByAction(scenes: SceneSessionData | undefined, actio
         case CourseActions.MANAGE:
             return translationsHandler(translationKeys.CLASSROOM_HELPER_RETURN_TO_CHOOSING_OWN_COURSE_TEXT, lang);
     }
+}
+
+function getCreationTimeFormattedInText(creationTime: string): string {
+    const creationDateTime = new Date(creationTime);
+    const creationDateText = creationDateTime.getDate() < 10 ? '0' + creationDateTime.getDate() : creationDateTime.getDate();
+    const creationMonthText = creationDateTime.getMonth() + 1 < 10 ? '0' + (creationDateTime.getMonth() + 1) : creationDateTime.getMonth() + 1;
+
+    return `${creationDateText}.${creationMonthText}.${creationDateTime.getFullYear()}` +
+        ` | ${creationDateTime.getHours() ?? '00'}:${creationDateTime.getMinutes() ?? '00'}`
+}
+
+function getReturnKeyboard(lang: LangTypes, courseName: string): Markup.Markup<ReplyKeyboardMarkup> {
+    return Markup.keyboard([
+        [format(translationsHandler(translationKeys.CLASSROOM_HELPER_RETURN_TO_SPECIF_COURSE_TEXT, lang), courseName),
+        translationsHandler(translationKeys.CLASSROOM_HELPER_RETURN_TO_HELPER_MENU_TEXT, lang)
+        ],
+
+        [translationsHandler(translationKeys.GENERAL_RETURN_TO_MAIN_MENU_TEXT, lang)]
+    ])
+        .oneTime()
+        .resize();
 }

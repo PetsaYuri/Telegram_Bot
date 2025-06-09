@@ -85,5 +85,8 @@ export const classroomHelperTransKeys = addPrefixToKeysAndValues('classroom_help
     SUCCESSFULLY_LOGED_OUT_TEXT: 'successfullyLogedOutText',
 
     OPEN_MATERIALS_TEXT: 'openMaterialsText',
-    NO_MATER_WITH_PROVIDED_ID_TEXT: 'noMaterWithProvidedIdText'
+    NO_MATER_WITH_PROVIDED_ID_TEXT: 'noMaterWithProvidedIdText',
+
+    RETURN_TO_SPECIF_COURSE_TEXT: 'returnToSpecifCourseText',
+    RETURN_TO_SPECIF_COURSE_REGEX: 'returnToSpecifCourseRegex'
 })

@@ -2,7 +2,7 @@ import { Scenes } from "telegraf";
 import { ISceneContext } from "../../../types/ISceneContext";
 import { ModeTypes } from "../../../types/ModeTypes";
 import { getFormattedDate, getFormattedTime } from "../classroomHelperService";
-import { dueDateKeyboard, dueTimekeyboard, isPastDate, isPastDateAndTime, maxPointKeyboard, skipKeyboard } from "./createTaskScene";
+import { getDueDateKeyboard, getDueTimekeyboard, isPastDate, isPastDateAndTime, getMaxPointKeyboard, getSkipKeyboard } from "./createTaskScene";
 import { translationsHandler } from "../../../../api/middleware/translationsHandler";
 import { translationKeys } from "../../../translations/TranslationsKeys";
 import { forceExit, format, getLang } from "../../../botService";
@@ -25,7 +25,7 @@ export const editTaskWizardScene = new Scenes.WizardScene<ISceneContext>('EDIT_T
         const state = getState(ctx);
 
         const question = translationsHandler(translationKeys.SCENES_ENTER_NEW_TITLE_TEXT, lang) + ` (${skipText(ctx.session.__scenes, state.task.title)}):`;
-        await ctx.reply(question, skipKeyboard);
+        await ctx.reply(question, getSkipKeyboard(lang));
         return ctx.wizard.next();
     },
 
@@ -33,7 +33,7 @@ export const editTaskWizardScene = new Scenes.WizardScene<ISceneContext>('EDIT_T
         const lang = getLang(ctx.session.__scenes);
         const state = getState(ctx);
 
-        if (ctx.text === '/exit') {
+        if (ctx.text === '/exit' || ctx.text === translationsHandler(translationKeys.SCENES_EXIT_COMMAND, lang)) {
             forceExit(ctx, ModeTypes.CLASSROOM_HELPER);
             return;
         }
@@ -43,14 +43,15 @@ export const editTaskWizardScene = new Scenes.WizardScene<ISceneContext>('EDIT_T
             title = state.task.title;
 
         } else if (title.length < 1 || title.length > 3000) {
-            await ctx.reply(translationsHandler(translationKeys.SCENES_TITLE_MUST_BE_BETWEEN_TEXT, lang), skipKeyboard);
+            await ctx.reply(translationsHandler(translationKeys.SCENES_TITLE_MUST_BE_BETWEEN_TEXT, lang), getSkipKeyboard(lang));
 
             ctx.wizard.back();
             return ctx.wizard.steps[ctx.wizard.cursor](ctx);
         }
 
         state.title = title;
-        await ctx.reply(translationsHandler(translationKeys.SCENES_ENTER_NEW_DESC_TEXT, lang) + ` ${skipText(ctx.session.__scenes, state.task?.description)})`, skipKeyboard);
+        await ctx.reply(translationsHandler(translationKeys.SCENES_ENTER_NEW_DESC_TEXT, lang)
+            + ` ${skipText(ctx.session.__scenes, state.task?.description)})`, getSkipKeyboard(lang));
         return ctx.wizard.next();
     },
 
@@ -58,7 +59,7 @@ export const editTaskWizardScene = new Scenes.WizardScene<ISceneContext>('EDIT_T
         const lang = getLang(ctx.session.__scenes);
         const state = getState(ctx);
 
-        if (ctx.text === '/exit') {
+        if (ctx.text === '/exit' || ctx.text === translationsHandler(translationKeys.SCENES_EXIT_COMMAND, lang)) {
             forceExit(ctx, ModeTypes.CLASSROOM_HELPER);
             return;
         }
@@ -70,7 +71,7 @@ export const editTaskWizardScene = new Scenes.WizardScene<ISceneContext>('EDIT_T
         } else if (description.length > 30000) {
             await ctx.reply(format
                 (translationsHandler(translationKeys.SCENES_DESC_MUST_BE_GREATER_TEXT, lang), skipText(ctx.session.__scenes, ctx.session.__scenes)),
-                skipKeyboard);
+                getSkipKeyboard(lang));
 
             ctx.wizard.back();
             return ctx.wizard.steps[ctx.wizard.cursor](ctx);
@@ -78,7 +79,7 @@ export const editTaskWizardScene = new Scenes.WizardScene<ISceneContext>('EDIT_T
 
         state.description = description;
         await ctx.reply(translationsHandler(translationKeys.SCENES_ENTER_NEW_MAX_SCORE_TEXT, lang) +
-            ` (${skipText(ctx.session.__scenes, state.task?.maxPoints)}):`, maxPointKeyboard);
+            ` (${skipText(ctx.session.__scenes, state.task?.maxPoints)}):`, getMaxPointKeyboard(lang));
         return ctx.wizard.next();
     },
 
@@ -86,7 +87,7 @@ export const editTaskWizardScene = new Scenes.WizardScene<ISceneContext>('EDIT_T
         const lang = getLang(ctx.session.__scenes);
         const state = getState(ctx);
 
-        if (ctx.text === '/exit') {
+        if (ctx.text === '/exit' || ctx.text === translationsHandler(translationKeys.SCENES_EXIT_COMMAND, lang)) {
             forceExit(ctx, ModeTypes.CLASSROOM_HELPER);
             return;
         }
@@ -101,7 +102,7 @@ export const editTaskWizardScene = new Scenes.WizardScene<ISceneContext>('EDIT_T
         if (!maxPoints) {
             maxPoints = Number.parseInt(maxPointsStr);
             if (Number.isNaN(maxPoints) || maxPoints > Number.MAX_SAFE_INTEGER || maxPoints < 0) {
-                await ctx.reply(translationsHandler(translationKeys.SCENES_MAX_SCORE_MUST_BE_GREATER_TEXT, lang), maxPointKeyboard);
+                await ctx.reply(translationsHandler(translationKeys.SCENES_MAX_SCORE_MUST_BE_GREATER_TEXT, lang), getMaxPointKeyboard(lang));
 
                 ctx.wizard.back();
                 return ctx.wizard.steps[ctx.wizard.cursor](ctx);
@@ -113,7 +114,7 @@ export const editTaskWizardScene = new Scenes.WizardScene<ISceneContext>('EDIT_T
 
         await ctx.reply(format(
             translationsHandler(translationKeys.SCENES_ENTER_NEW_DUE_DATE_TEXT, lang), skipText(ctx.session.__scenes, formatedDate)),
-            dueDateKeyboard);
+            getDueDateKeyboard(lang));
 
         return ctx.wizard.next();
     },
@@ -122,7 +123,7 @@ export const editTaskWizardScene = new Scenes.WizardScene<ISceneContext>('EDIT_T
         const lang = getLang(ctx.session.__scenes);
         const state = getState(ctx);
 
-        if (ctx.text === '/exit') {
+        if (ctx.text === '/exit' || ctx.text === translationsHandler(translationKeys.SCENES_EXIT_COMMAND, lang)) {
             forceExit(ctx, ModeTypes.CLASSROOM_HELPER);
             return;
         }
@@ -136,12 +137,12 @@ export const editTaskWizardScene = new Scenes.WizardScene<ISceneContext>('EDIT_T
 
         if (!dueDate) {
             if (!dueDateStr.match(/^(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.\d{4}$/)) {
-                await ctx.reply(translationsHandler(translationKeys.SCENES_DATE_INCORRECT_FORMAT_TEXT, lang), dueDateKeyboard);
+                await ctx.reply(translationsHandler(translationKeys.SCENES_DATE_INCORRECT_FORMAT_TEXT, lang), getDueDateKeyboard(lang));
                 ctx.wizard.back();
                 return ctx.wizard.steps[ctx.wizard.cursor](ctx);
 
             } else if (isPastDate(dueDateStr)) {
-                await ctx.reply(translationsHandler(translationKeys.SCENES_DATE_CANNOT_BE_IN_PAST_TEXT, lang), dueDateKeyboard);
+                await ctx.reply(translationsHandler(translationKeys.SCENES_DATE_CANNOT_BE_IN_PAST_TEXT, lang), getDueDateKeyboard(lang));
                 ctx.wizard.back();
                 return ctx.wizard.steps[ctx.wizard.cursor](ctx);
             }
@@ -154,7 +155,7 @@ export const editTaskWizardScene = new Scenes.WizardScene<ISceneContext>('EDIT_T
 
         await ctx.reply(format(
             translationsHandler(translationKeys.SCENES_ENTER_NEW_DUE_TIME_TEXT, lang), skipText(ctx.session.__scenes, formatedTime)),
-            dueTimekeyboard);
+            getDueTimekeyboard(lang));
         return ctx.wizard.next();
     },
 
@@ -162,7 +163,7 @@ export const editTaskWizardScene = new Scenes.WizardScene<ISceneContext>('EDIT_T
         const lang = getLang(ctx.session.__scenes);
         const state = getState(ctx);
 
-        if (ctx.text === '/exit') {
+        if (ctx.text === '/exit' || ctx.text === translationsHandler(translationKeys.SCENES_EXIT_COMMAND, lang)) {
             forceExit(ctx, ModeTypes.CLASSROOM_HELPER);
             return;
         }
@@ -178,13 +179,13 @@ export const editTaskWizardScene = new Scenes.WizardScene<ISceneContext>('EDIT_T
             if (!dueTimeStr.match(/^(?:[01]\d|2[0-3]):[0-5]\d$/)) {
                 await ctx.reply(format(
                     translationsHandler(translationKeys.SCENES_TIME_INCORRECT_FORMAT_TEXT, lang), skipText(ctx.session.__scenes)),
-                    dueTimekeyboard);
+                    getDueTimekeyboard(lang));
 
                 ctx.wizard.back();
                 return ctx.wizard.steps[ctx.wizard.cursor](ctx);
 
             } else if (isPastDateAndTime(state.dueDate as string, dueTime)) {
-                await ctx.reply(translationsHandler(translationKeys.SCENES_TIME_CANNOT_BE_IN_PAST_TEXT, lang), dueTimekeyboard);
+                await ctx.reply(translationsHandler(translationKeys.SCENES_TIME_CANNOT_BE_IN_PAST_TEXT, lang), getDueTimekeyboard(lang));
                 ctx.wizard.back();
                 return ctx.wizard.steps[ctx.wizard.cursor](ctx);
             }

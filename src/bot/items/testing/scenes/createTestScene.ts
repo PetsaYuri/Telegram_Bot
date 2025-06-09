@@ -4,7 +4,7 @@ import { ISceneContext } from "../../../types/ISceneContext";
 import { ModeTypes } from "../../../types/ModeTypes";
 import { translationsHandler } from "../../../../api/middleware/translationsHandler";
 import { translationKeys } from "../../../translations/TranslationsKeys";
-import { exitButton, exitKeyboard, forceExit, getLang } from "../../../botService";
+import { getExitButton, getExitKeyboard, forceExit, getLang } from "../../../botService";
 
 interface ICreateTestState {
     lang: string,
@@ -16,14 +16,14 @@ interface ICreateTestState {
 export const createTestWizardScene = new Scenes.WizardScene<ISceneContext>('CREATE_TEST',
     async (ctx) => {
         const lang = getLang(ctx.session.__scenes);
-        await ctx.reply(translationsHandler(translationKeys.SCENES_ENTER_TITLE_TEXT, lang), exitKeyboard);
+        await ctx.reply(translationsHandler(translationKeys.SCENES_ENTER_TITLE_TEXT, lang), getExitKeyboard(lang));
         return ctx.wizard.next();
     },
 
     async (ctx: any) => {
         const lang = getLang(ctx.session.__scenes);
         const state = getState(ctx);
-        if (ctx.text === '/exit') {
+        if (ctx.text === '/exit' || ctx.text === translationsHandler(translationKeys.SCENES_EXIT_COMMAND, lang)) {
             forceExit(ctx, ModeTypes.TESTING);
             return;
         }
@@ -40,7 +40,7 @@ export const createTestWizardScene = new Scenes.WizardScene<ISceneContext>('CREA
         state.title = title;
         const keyboardButtons = [
             ...Object.values(TestTypes).map(type => [Markup.button.text(type)]),
-            ...exitButton
+            ...getExitButton(lang)
         ]
 
         await ctx.reply(translationsHandler(translationKeys.SCENES_SELECT_TEST_TYPE_TEXT, lang),
@@ -55,7 +55,7 @@ export const createTestWizardScene = new Scenes.WizardScene<ISceneContext>('CREA
     async (ctx: any) => {
         const lang = getLang(ctx.session.__scenes);
         const state = getState(ctx);
-        if (ctx.text === '/exit') {
+        if (ctx.text === '/exit' || ctx.text === translationsHandler(translationKeys.SCENES_EXIT_COMMAND, lang)) {
             forceExit(ctx, ModeTypes.TESTING);
             return;
         }
@@ -70,14 +70,14 @@ export const createTestWizardScene = new Scenes.WizardScene<ISceneContext>('CREA
         }
 
         state.typeOfTest = typeOfTest;
-        await ctx.reply(translationsHandler(translationKeys.SCENES_ATTACH_DOC_TEXT, lang), exitKeyboard);
+        await ctx.reply(translationsHandler(translationKeys.SCENES_ATTACH_DOC_TEXT, lang), getExitKeyboard(lang));
         return ctx.wizard.next();
     },
 
     async (ctx: any) => {
         const lang = getLang(ctx.session.__scenes);
         const state = getState(ctx);
-        if (ctx.text === '/exit') {
+        if (ctx.text === '/exit' || ctx.text === translationsHandler(translationKeys.SCENES_EXIT_COMMAND, lang)) {
             forceExit(ctx, ModeTypes.TESTING);
             return;
         }

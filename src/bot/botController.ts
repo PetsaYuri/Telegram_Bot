@@ -14,6 +14,8 @@ export const botController = (bot: Telegraf<Scenes.SceneContext>) => {
     bot.on(message('text'), async (ctx) => {
         const text = ctx.text as string;
         const lang = getLang(ctx.scene.session) ?? LangTypes.EN;
+
+        const scenes = ctx.session.__scenes;
         let res;
 
         switch (text) {
@@ -21,6 +23,7 @@ export const botController = (bot: Telegraf<Scenes.SceneContext>) => {
             case '/back':
             case '/menu':
             case translationsHandler(translationKeys.GENERAL_MAIN_MENU_COMMAND, lang):
+            case translationsHandler(translationKeys.GENERAL_RETURN_TO_MAIN_MENU_TEXT, lang):
                 res = botService.getMainMenuResponse(ctx.session.__scenes);
                 break;
 
@@ -41,39 +44,7 @@ export const botController = (bot: Telegraf<Scenes.SceneContext>) => {
             case '/terms_of_service':
                 res = botService.getTermsOfServiceResponse(ctx.session.__scenes);
                 break;
-        }
 
-        if (LANGUAGES.includes(text)) {
-            const language = LANGUAGES.find(lang => lang === text) as string;
-            res = await botService.setChosenLanguage(ctx.scene.session, language);
-        }
-
-        if (res) {
-            await ctx.reply(res.text, res.keyboard);
-
-        } else {
-            await defineMode(ctx);
-        }
-    })
-
-    bot.on('callback_query', async (ctx) => {
-        await passContextToItemControllers(ctx);
-    })
-
-    bot.on([message('photo'), message('voice')], async (ctx) => {
-        await aiChatController(ctx);
-    })
-}//set better prompt for image and voice (check if image without text - set good prompt)
-
-async function defineMode(ctx: any) {
-    const text = ctx.text;
-    const scenes = ctx.session.__scenes;
-
-    let mode = getMode(scenes);
-    const lang = getLang(scenes);
-
-    if (!mode) {
-        switch (text) {
             case '/ai_assistant':
             case translationsHandler(translationKeys.GENERAL_AI_ASSISTANT_TEXT, lang):
             case translationsHandler(translationKeys.GENERAL_AI_ASSISTANT_COMMAND, lang):
@@ -93,10 +64,26 @@ async function defineMode(ctx: any) {
                 break;
         }
 
-        mode = getMode(scenes);
-    }
+        if (LANGUAGES.includes(text)) {
+            const language = LANGUAGES.find(lang => lang === text) as string;
+            res = await botService.setChosenLanguage(ctx.scene.session, language);
+        }
 
-    await passContextToItemControllers(ctx);
+        if (res) {
+            await ctx.reply(res.text, res.keyboard);
+
+        } else {
+            await passContextToItemControllers(ctx);
+        }
+    })
+
+    bot.on('callback_query', async (ctx) => {
+        await passContextToItemControllers(ctx);
+    })
+
+    bot.on([message('photo'), message('voice')], async (ctx) => {
+        await aiChatController(ctx);
+    })
 }
 
 async function passContextToItemControllers(ctx: any) {

@@ -22,7 +22,7 @@ export const generalTranslations = {
         testingCommand: '/testing',
 
         unknownCommandText: 'Unknown command. Please try again.',
-        chooseNextActionText: 'choose the next action:',
+        chooseNextActionText: 'Choose the next action:',
 
         daysText: 'days',
         hoursText: 'hours',
@@ -60,6 +60,11 @@ export const generalTranslations = {
 
         invalidMonthNumText: 'invalid month number',
         dayDoesNotExistText: "the day with provided number doesn't exist",
+
+        internalServerErrorText: 'Internal Server Error',
+        geminiOverloadedText: "The 'Gemini' is overloaded. Please try again later.",
+
+        returnToMainMenuText: 'Return to the main menu'
     },
 
     ua: {
@@ -85,7 +90,7 @@ export const generalTranslations = {
         testingCommand: '/тестування',
 
         unknownCommandText: 'Невідома команда. Спробуйте ще раз.',
-        chooseNextActionText: 'оберіть наступну дію:',
+        chooseNextActionText: 'Оберіть наступну дію:',
 
         daysText: 'днів',
         hoursText: 'годин',
@@ -123,5 +128,10 @@ export const generalTranslations = {
 
         invalidMonthNumText: 'недійсний номер місяця',
         dayDoesNotExistText: "День із вказаним номером не існує",
+
+        internalServerErrorText: 'Внутрішня помилка сервера',
+        geminiOverloadedText: "'Gemini' перевантажена. Спробуйте ще раз пізніше.",
+
+        returnToMainMenuText: 'Повернутися до головного меню'
     }
 }

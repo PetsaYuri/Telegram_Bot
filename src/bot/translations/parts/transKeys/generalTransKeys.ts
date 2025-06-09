@@ -61,4 +61,9 @@ export const generalTransKeys = addPrefixToKeysAndValues('general', {
 
     INVALID_MONTH_NUM_TEXT: 'invalidMonthNumText',
     DAY_DOES_NOT_EXIST_TEXT: 'dayDoesNotExistText',
+
+    INTERNAL_SERVER_ERROR_TEXT: 'internalServerErrorText',
+    GEMINI_OVERLOADED_TEXT: 'geminiOverloadedText',
+
+    RETURN_TO_MAIN_MENU_TEXT: 'returnToMainMenuText'
 })

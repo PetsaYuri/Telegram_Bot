@@ -12,11 +12,6 @@ const ENGLISH_LANGUAGE_TEXT = 'English language';
 const UKRAINIAN_LANGUAGE_TEXT = 'Українська мова';
 export const LANGUAGES = [ENGLISH_LANGUAGE_TEXT, UKRAINIAN_LANGUAGE_TEXT];
 
-export const exitButton = [['/exit']];
-export const exitKeyboard = Markup.keyboard(exitButton)
-    .resize()
-    .oneTime();
-
 export const botService = {
 
     getMainMenuResponse: (scenes: SceneSessionData | undefined): IBotResponse => {
@@ -200,4 +195,16 @@ export function forceExit(ctx: any, mode: ModeTypes) {
     };
 
     return ctx.scene.leave();
-} 
+}
+
+export function getExitButton(lang: LangTypes) {
+    return [[translationsHandler(translationKeys.SCENES_EXIT_COMMAND, lang)]];
+
+}
+
+export function getExitKeyboard(lang: LangTypes) {
+    const exitButton = getExitButton(lang);
+    return Markup.keyboard(exitButton)
+        .resize()
+        .oneTime();
+}

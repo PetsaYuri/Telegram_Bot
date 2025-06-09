@@ -48,6 +48,7 @@ export const classroomHelperController = async (ctx: any) => {
             const allMatFromCourseMatch = text?.match(translationsHandler(translationKeys.CLASSROOM_HELPER_REVIEW_MATERIALS_REGEX, lang));
             const createTaskMatch = text?.match(translationsHandler(translationKeys.CLASSROOM_HELPER_CREATE_TASK_REGEX, lang));
             const taskCalendarForCourseMatch = text?.match(translationsHandler(translationKeys.CLASSROOM_HELPER_SHOW_TASK_CALENDAR_FOR_COURSE_REGEX, lang));
+            const returnToSpecifCourseMatch = text?.match(translationsHandler(translationKeys.CLASSROOM_HELPER_RETURN_TO_SPECIF_COURSE_REGEX, lang));
 
             if (manageCourseMatch) {
                 return await processingManageCourseMessage(ctx, manageCourseMatch);
@@ -67,6 +68,10 @@ export const classroomHelperController = async (ctx: any) => {
 
             else if (taskCalendarForCourseMatch) {
                 return await processingTaskCalendarForCourseMessage(ctx, taskCalendarForCourseMatch);
+            }
+
+            else if (returnToSpecifCourseMatch) {
+                return await processingAllMatFromCourseMessage(ctx, returnToSpecifCourseMatch);
             }
 
             if (!ctx?.callbackQuery) {
@@ -174,20 +179,13 @@ async function processingAllMatFromCourseMessage(ctx: any, match: RegExpMatchArr
     const chatId = ctx.chat.id;
     const courseName = match[1];
 
-    const materials = await classroomHelperService.getAllMaterialsResponse(chatId, ctx.session.__scenes, courseName, false) as IBotResponse[];
+    const materials = await classroomHelperService.getAllMaterialsResponse(chatId, ctx.session.__scenes, courseName, false);
 
-    if (Array.isArray(materials)) {
-        const res = classroomHelperService.getViewCourseResponse(ctx.session.__scenes, courseName);
-        await ctx.reply(res.text, res.keyboard);
-        materials.map(
-            async ({ text, keyboard }) => await ctx.reply(text, keyboard)
-        );
-
-    } else {
-        console.log('materials');
-        console.log(materials)
-        await ctx.reply("materials.text, materials.keyboard");
-    }
+    const res = classroomHelperService.getViewCourseResponse(ctx.session.__scenes, courseName);
+    await ctx.reply(res.text, res.keyboard);
+    materials.map(
+        async ({ text, keyboard }) => await ctx.reply(text, keyboard)
+    );
 }
 
 async function processingBackToCoursesMessage(ctx: Scenes.SceneContext) {

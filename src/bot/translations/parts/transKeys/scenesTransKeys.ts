@@ -43,4 +43,12 @@ export const scenesTransKeys = addPrefixToKeysAndValues('scenes', {
     ENTER_NUM_OF_QUESTS_TEXT: 'enterNumOfQuestsText',
     MUST_ENTER_NUMBER_TEXT: 'mustEnterNumberText',
     ENTERED_NUM_BIGGER_TEXT: 'enteredNumBiggerText',
+
+    ONE_DAY_TEXT: 'oneDayText',
+    LETTER_D_TEXT: 'letterDText',
+
+    ONE_HOUR_TEXT: 'oneHourText',
+    ONE_MINUTE_TEXT: 'oneMinuteText',
+
+    EXIT_COMMAND: 'exitCommand'
 })

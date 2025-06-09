@@ -6,7 +6,7 @@ import { ModeTypes } from "../../../types/ModeTypes";
 import { SceneSessionData } from "telegraf/typings/scenes";
 import { translationsHandler } from "../../../../api/middleware/translationsHandler";
 import { translationKeys } from "../../../translations/TranslationsKeys";
-import { exitKeyboard, forceExit, getLang } from "../../../botService";
+import { getExitKeyboard, forceExit, getLang } from "../../../botService";
 
 interface IPassTestState {
     testId: string,
@@ -21,14 +21,14 @@ export const passTestWizardScene = new Scenes.WizardScene<ISceneContext>('PASS_T
         const lang = getLang(ctx.session.__scenes);
         const question = translationsHandler(translationKeys.SCENES_ENTER_NUM_OF_QUESTS_TEXT, lang);
 
-        await ctx.reply(question, exitKeyboard);
+        await ctx.reply(question, getExitKeyboard(lang));
         return ctx.wizard.next();
     },
 
     async (ctx: any) => {
         const lang = getLang(ctx.session.__scenes);
         const state = getState(ctx);
-        if (ctx.text === '/exit') {
+        if (ctx.text === '/exit' || ctx.text === translationsHandler(translationKeys.SCENES_EXIT_COMMAND, lang)) {
             forceExit(ctx, ModeTypes.TESTING);
             return;
         }

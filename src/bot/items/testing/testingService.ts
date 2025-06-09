@@ -156,12 +156,14 @@ export const testingService = {
                         break;
 
                     case TestTypes.EXAM:
-                        const question = prompt + `\n ` + translationsHandler(translationKeys.TESTING_QUESTION_TEXT, lang) + `: ${value}`;
+                        const question = prompt + `\n ` + translationsHandler(translationKeys.TESTING_QUESTION_TEXT, lang)
+                            + `: ${test.questions[key]}\n` + 'Відповідь: ' + value;
                         const responseFromAi = await aiChatService.getAnswerFromPrompt(question, undefined, aiChatModels.GEMINI_2_0_FLASH);
 
-                        const answer = translationsHandler(translationKeys.TESTING_QUESTION_TEXT, lang) + ': №'
-                            + key + value + '\n' + '_____________________\n' + responseFromAi;
-                        await ctx.reply(convertToMarkdownV2(answer), {
+                        const answer = translationsHandler(translationKeys.TESTING_QUESTION_TEXT, lang) + ': №' + key + '. '
+                            + test.questions[key] + '\n' + '\n Відповідь від ШІ: \n' + responseFromAi;
+
+                        await ctx.reply(convertAiAnswer(answer), {
                             parse_mode: "MarkdownV2"
                         });
                         break;
@@ -300,6 +302,20 @@ function convertToMarkdownV2(text: string): string {
     return text
         .replace(/\\/g, '\\\\')
         .replace(/([_*[\]()~`>#+\-={}.!])/g, '\\$1')
+        .replace(/\n/g, '\n');
+}
+
+function convertAiAnswer(answer: string): string {
+    return answer
+        .replace(/\\/g, '\\\\')
+        .replace(/([*[\]()~`>#+=|{}.!-])/g, (match, offset, str) => {
+            const prev = str[offset - 1];
+            const next = str[offset + 1];
+
+            if (match === '*' && prev === '*' && next !== '*') return '*';
+            if (match === '|') return '|';
+            return '\\' + match;
+        })
         .replace(/\n/g, '\n');
 }
 
@@ -457,4 +473,14 @@ function getBackToTestsKeyboard(scenes: SceneSessionData | undefined) {
     ])
         .oneTime()
         .resize();
+}
+
+function sanitizeForMarkdownV2(text: string): string {
+    return text
+        .replace(/\*\*/g, '')
+        .replace(/\|\|/g, '')
+        .replace(/\\/g, '\\\\')
+        .replace(/([_*[\]()~`>#+\-=|{}.!])/g, '\\$1')
+        .replace(/\//g, '\\/')
+        .replace(/\n/g, '\n');
 }

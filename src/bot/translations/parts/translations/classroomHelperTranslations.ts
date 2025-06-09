@@ -85,7 +85,10 @@ export const classroomHelperTranslations = {
         successfullyLogedOutText: 'You have successfully logged out',
 
         openMaterialsText: 'Open materials',
-        noMaterWithProvidedIdText: "There's no material with the provided id."
+        noMaterWithProvidedIdText: "There's no material with the provided id.",
+
+        returnToSpecifCourseText: "Return to the '%s' course",
+        returnToSpecifCourseRegex: /^Return to the '(.+)' course$/,
     },
 
     ua: {
@@ -130,8 +133,8 @@ export const classroomHelperTranslations = {
         successUpdatedText: 'Успішно оновлено!',
         successDeletedText: 'Успішно видалено!',
 
-        notifMessageText: "Сповіщення: тільки %s залишилося до дати здавання '%s' завдання ('%s' курс)",
-        notifSetUpText: "Сповіщення для '%s' завдання успішно встановлено та працюватиме після: %s",
+        notifMessageText: "Сповіщення: тільки %s залишилося до закінчення терміну виконання для '%s' завдання ('%s' курс)",
+        notifSetUpText: "Сповіщення для '%s' завдання успішно встановлено та спрацює після: %s",
         setNotifText: 'Встановити сповіщення',
 
         dueDateText: 'Термін виконання',
@@ -174,6 +177,9 @@ export const classroomHelperTranslations = {
         successfullyLogedOutText: 'Ви успішно вийшли з системи',
 
         openMaterialsText: 'Відкрити матеріали',
-        noMaterWithProvidedIdText: "Немає матеріалів із вказаним ідентифікатором."
+        noMaterWithProvidedIdText: "Немає матеріалів із вказаним ідентифікатором.",
+
+        returnToSpecifCourseText: "Повернутися до курсу '%s'",
+        returnToSpecifCourseRegex: /^Повернутися до курсу '(.+)'$/,
     }
 }
